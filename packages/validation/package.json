@@ -1,0 +1,32 @@
+{
+  "name": "@mep/validation",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/*": "./src/*"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput"
+  },
+  "dependencies": {
+    "@mep/types": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@mep/eslint-config": "workspace:*",
+    "typescript": "^5.7.2"
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
+}

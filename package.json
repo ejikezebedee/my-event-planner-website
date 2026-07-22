@@ -1,0 +1,29 @@
+{
+  "name": "my-event-planner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "My Event Planner \u2014 production-grade event planning and budget control platform",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "typecheck": "turbo run typecheck",
+    "prisma:generate": "pnpm --filter @mep/api exec prisma generate",
+    "prisma:migrate": "pnpm --filter @mep/api exec prisma migrate deploy",
+    "prisma:migrate:dev": "pnpm --filter @mep/api exec prisma migrate dev",
+    "seed": "pnpm --filter @mep/api run seed",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,yml,yaml}\""
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3"
+  }
+}

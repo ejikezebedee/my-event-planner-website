@@ -1,0 +1,680 @@
+// My Event Planner — PostgreSQL schema
+// Money is always BigInt minor units (€10.50 = 1050). Never Float.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum WorkspaceRole {
+  owner
+  admin
+  planner
+  viewer
+}
+
+enum EventMemberRole {
+  planner
+  viewer
+}
+
+enum EventStatus {
+  draft
+  planning
+  confirmed
+  in_progress
+  completed
+  cancelled
+  archived
+}
+
+enum ExpenseStatus {
+  draft
+  unpaid
+  partially_paid
+  paid
+  overpaid
+  refunded
+  cancelled
+  disputed
+}
+
+enum PaymentType {
+  payment
+  refund
+}
+
+enum PaymentMethod {
+  cash
+  bank_transfer
+  debit_card
+  credit_card
+  paypal
+  mobile_payment
+  cheque
+  other
+}
+
+enum VendorStatus {
+  potential
+  contacted
+  quotation_requested
+  quotation_received
+  shortlisted
+  selected
+  contracted
+  deposit_paid
+  fully_paid
+  service_completed
+  cancelled
+}
+
+enum InvitationStatus {
+  not_invited
+  prepared
+  invited
+  delivered
+  failed
+}
+
+enum RsvpStatus {
+  pending
+  accepted
+  declined
+  maybe
+  no_response
+}
+
+enum AttendanceStatus {
+  expected
+  checked_in
+  absent
+  cancelled
+}
+
+enum TaskStatus {
+  not_started
+  in_progress
+  blocked
+  completed
+  cancelled
+}
+
+enum Priority {
+  low
+  medium
+  high
+  critical
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id                   BigInt     @id @default(autoincrement())
+  email                String     @unique @db.VarChar(320)
+  name                 String     @db.VarChar(255)
+  passwordHash         String     @db.VarChar(255)
+  emailVerifiedAt      DateTime?
+  timezone             String     @default("Europe/Berlin") @db.VarChar(64)
+  dateFormat           String     @default("dd.MM.yyyy") @db.VarChar(16)
+  currency             String     @default("EUR") @db.Char(3)
+  weekStart            Int        @default(1)
+  // Per-user notification preferences: { "types": { "task_overdue": true, ... }, "email": true }
+  notificationPrefs    Json?
+  deletionRequestedAt  DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  sessions             Session[]
+  memberships          WorkspaceMember[]
+  ownedWorkspaces      Workspace[]      @relation("WorkspaceOwner")
+  eventMemberships     EventMember[]
+  notifications        Notification[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Session {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt
+  tokenHash   String    @unique @db.VarChar(64)
+  userAgent   String?   @db.VarChar(512)
+  ip          String?   @db.VarChar(64)
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id         BigInt    @id @default(autoincrement())
+  userId     BigInt
+  tokenHash  String    @unique @db.VarChar(64)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id         BigInt    @id @default(autoincrement())
+  userId     BigInt
+  tokenHash  String    @unique @db.VarChar(64)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+// Email change: the new address must be verified before it replaces the old.
+model EmailChangeToken {
+  id         BigInt    @id @default(autoincrement())
+  userId     BigInt
+  newEmail   String    @db.VarChar(320)
+  tokenHash  String    @unique @db.VarChar(64)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("email_change_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Workspaces
+// ---------------------------------------------------------------------------
+
+model Workspace {
+  id         BigInt        @id @default(autoincrement())
+  name       String        @db.VarChar(255)
+  currency   String        @default("EUR") @db.Char(3)
+  timezone   String        @default("Europe/Berlin") @db.VarChar(64)
+  ownerId    BigInt
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  owner      User              @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members    WorkspaceMember[]
+  events     Event[]
+  vendors    Vendor[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id           BigInt        @id @default(autoincrement())
+  workspaceId  BigInt
+  userId       BigInt
+  role         WorkspaceRole
+  createdAt    DateTime      @default(now())
+
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+model WorkspaceInvitation {
+  id           BigInt        @id @default(autoincrement())
+  workspaceId  BigInt
+  email        String        @db.VarChar(320)
+  role         WorkspaceRole
+  tokenHash    String        @unique @db.VarChar(64)
+  invitedById  BigInt
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@map("workspace_invitations")
+}
+
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+model Event {
+  id              BigInt        @id @default(autoincrement())
+  workspaceId     BigInt
+  name            String        @db.VarChar(255)
+  type            String        @default("other") @db.VarChar(64)
+  description     String?
+  startAt         DateTime?
+  endAt           DateTime?
+  timezone        String        @default("Europe/Berlin") @db.VarChar(64)
+  venueName       String?       @db.VarChar(255)
+  street          String?       @db.VarChar(255)
+  city            String?       @db.VarChar(128)
+  state           String?       @db.VarChar(128)
+  postalCode      String?       @db.VarChar(32)
+  country         String?       @db.VarChar(128)
+  expectedGuests  Int?
+  currency        String        @default("EUR") @db.Char(3)
+  budgetAmount    BigInt        @default(0)
+  notes           String?
+  status          EventStatus   @default(draft)
+  ownerId         BigInt
+  createdById     BigInt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members         EventMember[]
+  budgetCategories BudgetCategory[]
+  budgetItems     BudgetItem[]
+  expenses        Expense[]
+  payments        Payment[]
+  eventVendors    EventVendor[]
+  guests          Guest[]
+  guestGroups     GuestGroup[]
+  tasks           Task[]
+  timelineEntries TimelineEntry[]
+  documents       Document[]
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([startAt])
+  @@map("events")
+}
+
+model EventMember {
+  id         BigInt          @id @default(autoincrement())
+  eventId    BigInt
+  userId     BigInt
+  role       EventMemberRole @default(planner)
+  createdAt  DateTime        @default(now())
+
+  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_members")
+}
+
+// ---------------------------------------------------------------------------
+// Budget
+// ---------------------------------------------------------------------------
+
+model BudgetCategory {
+  id         BigInt   @id @default(autoincrement())
+  eventId    BigInt
+  name       String   @db.VarChar(128)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  event      Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  items      BudgetItem[]
+
+  @@index([eventId])
+  @@map("budget_categories")
+}
+
+model BudgetItem {
+  id             BigInt    @id @default(autoincrement())
+  eventId        BigInt
+  categoryId     BigInt
+  name           String    @db.VarChar(255)
+  description    String?
+  plannedAmount  BigInt    @default(0)
+  vendorId       BigInt?
+  dueDate        DateTime?
+  priority       Priority  @default(medium)
+  notes          String?
+  createdById    BigInt
+  createdAt      DateTime  @default(now())
+
+  event          Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category       BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  expenses       Expense[]
+
+  @@index([eventId])
+  @@map("budget_items")
+}
+
+// ---------------------------------------------------------------------------
+// Expenses & payments
+// ---------------------------------------------------------------------------
+
+model Expense {
+  id                   BigInt        @id @default(autoincrement())
+  eventId              BigInt
+  title                String        @db.VarChar(255)
+  description          String?
+  categoryId           BigInt?
+  budgetItemId         BigInt?
+  vendorId             BigInt?
+  expenseDate          DateTime
+  serviceDate          DateTime?
+  subtotal             BigInt        @default(0)
+  taxAmount            BigInt        @default(0)
+  totalAmount          BigInt        @default(0)
+  grossOnly            Boolean       @default(false)
+  currency             String        @default("EUR") @db.Char(3)
+  dueDate              DateTime?
+  status               ExpenseStatus @default(unpaid)
+  paymentMethodSummary String?       @db.VarChar(128)
+  invoiceNumber        String?       @db.VarChar(128)
+  referenceNumber      String?       @db.VarChar(128)
+  notes                String?
+  version              Int           @default(1)
+  createdById          BigInt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  event                Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  budgetItem           BudgetItem?   @relation(fields: [budgetItemId], references: [id], onDelete: SetNull)
+  payments             Payment[]
+  documents            Document[]
+
+  @@index([eventId])
+  @@index([status])
+  @@index([budgetItemId])
+  @@map("expenses")
+}
+
+model Payment {
+  id                BigInt        @id @default(autoincrement())
+  expenseId         BigInt
+  eventId           BigInt
+  vendorId          BigInt?
+  type              PaymentType   @default(payment)
+  refundOfPaymentId BigInt?
+  amount            BigInt
+  currency          String        @default("EUR") @db.Char(3)
+  paidAt            DateTime
+  method            PaymentMethod @default(bank_transfer)
+  reference         String?       @db.VarChar(128)
+  recipient         String?       @db.VarChar(255)
+  notes             String?
+  reversedAt        DateTime?
+  reversalReason    String?
+  idempotencyKey    String?       @db.VarChar(64)
+  idempotencyHash   String?       @db.VarChar(64)
+  createdById       BigInt
+  createdAt         DateTime      @default(now())
+
+  expense           Expense       @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  event             Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  refundOfPayment   Payment?      @relation("PaymentRefunds", fields: [refundOfPaymentId], references: [id], onDelete: SetNull)
+  refunds           Payment[]     @relation("PaymentRefunds")
+  documents         Document[]
+
+  // Idempotency is scoped PER EVENT: the same key in different events is a
+  // different logical operation and must never leak data across events.
+  @@unique([eventId, idempotencyKey])
+  @@index([eventId])
+  @@index([expenseId])
+  @@index([refundOfPaymentId])
+  @@map("payments")
+}
+
+// ---------------------------------------------------------------------------
+// Vendors
+// ---------------------------------------------------------------------------
+
+model Vendor {
+  id              BigInt    @id @default(autoincrement())
+  workspaceId     BigInt
+  businessName    String    @db.VarChar(255)
+  contactPerson   String?   @db.VarChar(255)
+  serviceCategory String?   @db.VarChar(128)
+  phone           String?   @db.VarChar(64)
+  email           String?   @db.VarChar(320)
+  website         String?   @db.VarChar(512)
+  street          String?   @db.VarChar(255)
+  city            String?   @db.VarChar(128)
+  state           String?   @db.VarChar(128)
+  postalCode      String?   @db.VarChar(32)
+  country         String?   @db.VarChar(128)
+  taxNumber       String?   @db.VarChar(128)
+  notes           String?
+  archived        Boolean   @default(false)
+  createdById     BigInt
+  createdAt       DateTime  @default(now())
+
+  workspace       Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  eventVendors    EventVendor[]
+
+  @@index([workspaceId])
+  @@map("vendors")
+}
+
+model EventVendor {
+  id                 BigInt       @id @default(autoincrement())
+  eventId            BigInt
+  vendorId           BigInt
+  serviceDescription String?
+  quotedAmount       BigInt?
+  agreedAmount       BigInt?
+  depositRequired    BigInt?
+  contractDate       DateTime?
+  serviceDate        DateTime?
+  paymentDueDate     DateTime?
+  status             VendorStatus @default(potential)
+  rating             Int?
+  notes              String?
+  createdAt          DateTime     @default(now())
+
+  event              Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendor             Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, vendorId])
+  @@map("event_vendors")
+}
+
+// ---------------------------------------------------------------------------
+// Guests
+// ---------------------------------------------------------------------------
+
+model GuestGroup {
+  id       BigInt  @id @default(autoincrement())
+  eventId  BigInt
+  name     String  @db.VarChar(128)
+
+  event    Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guests   Guest[]
+
+  @@map("guest_groups")
+}
+
+model Guest {
+  id                 BigInt           @id @default(autoincrement())
+  eventId            BigInt
+  firstName          String           @db.VarChar(128)
+  lastName           String           @db.VarChar(128)
+  email              String?          @db.VarChar(320)
+  phone              String?          @db.VarChar(64)
+  groupId            BigInt?
+  household          String?          @db.VarChar(255)
+  accompanyingCount  Int              @default(0)
+  invitationStatus   InvitationStatus @default(not_invited)
+  rsvpStatus         RsvpStatus       @default(pending)
+  attendanceStatus   AttendanceStatus @default(expected)
+  tableName          String?          @db.VarChar(128)
+  dietary            String?
+  allergies          String?
+  accessibility      String?
+  notes              String?
+  createdById        BigInt
+  createdAt          DateTime         @default(now())
+
+  event              Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  group              GuestGroup?      @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@map("guests")
+}
+
+// ---------------------------------------------------------------------------
+// Tasks
+// ---------------------------------------------------------------------------
+
+model Task {
+  id            BigInt     @id @default(autoincrement())
+  eventId       BigInt
+  title         String     @db.VarChar(255)
+  description   String?
+  category      String?    @db.VarChar(128)
+  assigneeId    BigInt?
+  priority      Priority   @default(medium)
+  startAt       DateTime?
+  dueAt         DateTime?
+  completedAt   DateTime?
+  completedById BigInt?
+  status        TaskStatus @default(not_started)
+  notes         String?
+  createdById   BigInt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  event         Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  dependencies  TaskDependency[] @relation("TaskDeps")
+  dependents    TaskDependency[] @relation("TaskDependents")
+
+  @@index([eventId])
+  @@index([dueAt])
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id               BigInt @id @default(autoincrement())
+  taskId           BigInt
+  dependsOnTaskId  BigInt
+
+  task             Task   @relation("TaskDeps", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn        Task   @relation("TaskDependents", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+  @@map("task_dependencies")
+}
+
+// ---------------------------------------------------------------------------
+// Timeline
+// ---------------------------------------------------------------------------
+
+model TimelineEntry {
+  id           BigInt    @id @default(autoincrement())
+  eventId      BigInt
+  title        String    @db.VarChar(255)
+  type         String    @default("custom") @db.VarChar(64)
+  startAt      DateTime
+  endAt        DateTime?
+  notes        String?
+  createdById  BigInt
+  createdAt    DateTime  @default(now())
+
+  event        Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("timeline_entries")
+}
+
+// ---------------------------------------------------------------------------
+// Documents
+// ---------------------------------------------------------------------------
+
+enum DocumentScanStatus {
+  pending
+  clean
+  infected
+  error
+}
+
+model Document {
+  id            BigInt              @id @default(autoincrement())
+  workspaceId   BigInt
+  eventId       BigInt?
+  expenseId     BigInt?
+  paymentId     BigInt?
+  linkedType    String?             @db.VarChar(32)
+  linkedId      BigInt?
+  category      String              @default("other") @db.VarChar(32)
+  originalName  String              @db.VarChar(512)
+  storageKey    String              @unique @db.VarChar(128)
+  mimeType      String              @db.VarChar(128)
+  sizeBytes     BigInt
+  description   String?
+  scanStatus    DocumentScanStatus  @default(pending)
+  scannedAt     DateTime?
+  uploadedById  BigInt
+  createdAt     DateTime            @default(now())
+
+  event         Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  expense       Expense?  @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  payment       Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@index([workspaceId])
+  @@index([expenseId])
+  @@index([paymentId])
+  @@map("documents")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications, contact, audit
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id           BigInt    @id @default(autoincrement())
+  userId       BigInt
+  workspaceId  BigInt?
+  eventId      BigInt?
+  type         String    @db.VarChar(64)
+  title        String    @db.VarChar(255)
+  body         String?
+  link         String?   @db.VarChar(512)
+  dedupeKey    String?   @db.VarChar(255)
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId])
+  @@map("notifications")
+}
+
+model ContactSubmission {
+  id         BigInt   @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  email      String   @db.VarChar(320)
+  subject    String   @db.VarChar(255)
+  message    String
+  consent    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@map("contact_submissions")
+}
+
+model AuditLog {
+  id            BigInt    @id @default(autoincrement())
+  workspaceId   BigInt?
+  eventId       BigInt?
+  actorId       BigInt?
+  action        String    @db.VarChar(128)
+  resourceType  String    @db.VarChar(64)
+  resourceId    String?   @db.VarChar(64)
+  metadata      String?
+  createdAt     DateTime  @default(now())
+
+  @@index([workspaceId])
+  @@index([eventId])
+  @@map("audit_logs")
+}

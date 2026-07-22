@@ -1,0 +1,131 @@
+# Production-style stack: PostgreSQL + Redis + MinIO + API + Web.
+# Usage:  docker compose -f docker-compose.prod.yml up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mep
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: my_event_planner
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mep -d my_event_planner"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9001:9001"
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      DATABASE_URL: postgresql://mep:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/my_event_planner
+      REDIS_URL: redis://redis:6379
+      TRUST_PROXY: ${TRUST_PROXY:-loopback, linklocal, uniquelocal}
+      WEB_ORIGIN: ${WEB_ORIGIN:?WEB_ORIGIN is required}
+      APP_BASE_URL: ${APP_BASE_URL:?APP_BASE_URL is required}
+      SESSION_COOKIE_SECURE: true
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-true}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:?EMAIL_PROVIDER is required}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_URL: ${SMTP_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:?EMAIL_FROM is required}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:?CONTACT_EMAIL is required}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-true}
+      MALWARE_SCAN_URL: ${MALWARE_SCAN_URL:?MALWARE_SCAN_URL is required}
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:?S3_BUCKET is required}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      S3_FORCE_PATH_STYLE: "true"
+    ports:
+      - "4000:4000"
+
+  # Dedicated email worker (C1): consumes the BullMQ "email" queue persisted
+  # in Redis. Without it, queued mail would never be delivered.
+  worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    restart: unless-stopped
+    command: node dist/worker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://mep:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/my_event_planner
+      REDIS_URL: redis://redis:6379
+      TRUST_PROXY: ${TRUST_PROXY:-loopback, linklocal, uniquelocal}
+      WEB_ORIGIN: ${WEB_ORIGIN:?WEB_ORIGIN is required}
+      APP_BASE_URL: ${APP_BASE_URL:?APP_BASE_URL is required}
+      SESSION_COOKIE_SECURE: true
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:?EMAIL_PROVIDER is required}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_URL: ${SMTP_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:?EMAIL_FROM is required}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:?CONTACT_EMAIL is required}
+      REQUIRE_EMAIL_VERIFICATION: "true"
+      MALWARE_SCAN_URL: ${MALWARE_SCAN_URL:?MALWARE_SCAN_URL is required}
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:?S3_BUCKET is required}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      S3_FORCE_PATH_STYLE: "true"
+      TRUST_PROXY: ${TRUST_PROXY:-loopback, linklocal, uniquelocal}
+      SWAGGER_ENABLED: "false"
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

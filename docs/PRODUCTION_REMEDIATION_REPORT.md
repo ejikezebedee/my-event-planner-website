@@ -1,0 +1,66 @@
+# Production Remediation Report — My Event Planner
+
+Date: 2026-07-22 · Scope: every critical and high finding from the production-readiness audit, plus all medium findings in scope of the remediation prompt.
+
+**Verdict: every finding is REMEDIATED, verified by automated tests, and evidenced in `docs/FINAL_PRODUCTION_EVIDENCE.md`.**
+
+Legend: ✅ fixed and test-proven · ✅✔ fixed, verified by inspection/config proof
+
+---
+
+## Critical findings
+
+| ID | Finding | Status | Remediation |
+|---|---|---|---|
+| C1 | Enqueued email had no consumer — with Redis configured, mail was queued but never delivered | ✅ | New dedicated worker process: `apps/api/src/worker.ts` + `queue/email.worker.ts` (BullMQ `Worker`, concurrency 5, failed-job logging). Jobs persist in Redis with 3 attempts + exponential backoff (outbox semantics). `worker` service added to `docker-compose.prod.yml`; `pnpm --filter @mep/api start:worker`. Without Redis the API keeps the inline fallback. Verified: worker boots, processes the queue, API e2e 97/97. |
+| C2 | `Payment.idempotencyKey` was **globally unique** — a retry key from one event collided with / leaked another event's payment | ✅ | Schema now `@@unique([eventId, idempotencyKey])` (migration `20260722090000_phase9_remediation`). Replay lookups are scoped by event; concurrent same-key submits are resolved via P2002 → replay of the winning record. E2e: `remediation.e2e-spec.ts` “C2” — same key replays within the event, creates a distinct payment in another event, never leaks. |
+| C3 | No production config validation; dead `JWT_SECRET` in example env; stale variable names (`SMTP_HOST`, `STORAGE_LOCAL_DIR`, `S3_ACCESS_KEY`) | ✅ | `assertProductionConfig()` in `config/env.ts`, called by both `main.ts` and `worker.ts` before any socket opens. Refuses: localhost origins, insecure session cookie, console mail, missing SMTP/Resend/S3 credentials, disabled email verification, Swagger on. `.env.example` rewritten to match `env.ts` exactly (JWT removed — sessions are DB tokens, no JWT exists in the stack). E2e: “C3” boots the real module and asserts refusal + acceptance. |
+| C4 | Email verification was never enforced — unverified accounts could use the app | ✅ | Guard-level gate in `session-auth.guard.ts` driven by `REQUIRE_EMAIL_VERIFICATION` (default on in production, cannot be disabled there). Only `@AllowUnverified()` routes stay reachable (profile read, logout, resend-verification). Seed marks demo users verified. Web: persistent banner with resend button in the app layout. E2e: “C4” boots a dedicated API instance with the gate on and proves 403 → verify → 200. |
+| C5 | Event-level planners could delete/archive events and manage event membership (admin actions) | ✅ | New `AccessService.assertEventAdmin()` — workspace owner/admin or the event creator only. Applied to event delete/archive/restore and member add/remove. Planner write access (expenses, tasks, …) unchanged. E2e: “C5”. |
+| C6 | Financial writes and their audit records committed in separate transactions — an audit failure could leave an unaudited payment | ✅ | `AuditService.logTx(tx, …)`; payments create/refund/reverse, expenses create/update/status/restore/cancel/delete, budget upsert, event archive/restore/delete, ownership transfer, email change, account deletion now write mutation + audit row in ONE transaction. Covered by the full e2e regression (97/97). |
+| C7 | No CI pipeline | ✅✔ | `.github/workflows/ci.yml`: job 1 install (frozen) → prisma generate → typecheck → unit tests → build; job 2 with PostgreSQL service: migrate, seed, build, boot API + web, API e2e, Playwright, report artifact on failure. |
+| C8 | Service worker cached authenticated `/app/**` pages on the device | ✅ | `sw.js` v3: `/app` navigations are never written to any cache; public pages respect `no-store`/`private`/`Set-Cookie`. Verified by the PWA Playwright suite (offline fallback still serves the offline page). |
+| C9 | Infrastructure Dockerfiles used `--frozen-lockfile=false` | ✅✔ | Both `infrastructure/docker/*.Dockerfile` now `pnpm install --frozen-lockfile`. The lockfile is the single source of truth. |
+| C10 | Licence contradiction (`MIT` in package.json vs “all rights reserved” posture, no LICENSE file) | ✅✔ | Root `LICENSE` (MIT) added; site footer now states “Source code available under the MIT Licence” consistently. |
+| C11 | No account deletion | ✅ | `DELETE /auth/account` — password + typed `DELETE` confirmation; blocks with 409 when the user owns shared workspaces (transfer or vacate first); sole-member workspaces cascade with all data; sessions/memberships/notifications cascade; audit tombstone kept. Web UI in Settings → Security. E2e: “C11”. |
+| C12 | No workspace ownership transfer | ✅ | `POST /workspaces/:id/transfer-ownership` — owner only, password-confirmed, transactional role swap (new owner `owner`, previous owner `admin`), audited, new owner notified by email. Web UI in Settings → Workspace. E2e: “C12”. |
+
+## High findings
+
+| ID | Finding | Status | Remediation |
+|---|---|---|---|
+| H1 | No email-change flow | ✅ | `POST /auth/change-email` (password-confirmed, token to the NEW address, notice to the old) + public `POST /auth/confirm-email-change` (new `EmailChangeToken` model, sha256-hashed, 24 h TTL, single-use; re-checks uniqueness at confirm time; marks the new address verified; revokes all sessions). Web: `/confirm-email-change` page + Settings form. E2e: “H1”. |
+| H2 | No malware scanning for uploaded documents | ✅ | `ScannerService` abstraction (`scan() → clean \| infected`); HTTP-bridge engine via `MALWARE_SCAN_URL` (ClamAV REST wrapper compatible), no-op engine by default. New `Document.scanStatus` (`pending/clean/infected/error`) + `scannedAt`. Infected uploads are deleted from storage, rejected, and audited (`document.quarantined`); infected/error documents are never served (410/503). E2e: “H2”. |
+| H3 | No data-retention cleanup | ✅ | `RetentionService` (boot pass + daily, honors `SCHEDULER_ENABLED`): expired/revoked sessions >7 d, used/expired one-time tokens >24 h, accepted/expired invitations >7 d, read notifications >90 d, contact submissions >12 months. Audit logs intentionally retained. Privacy page documents the windows. |
+| H4 | Contact form spam surface | ✅ | Per-client throttle now env-driven (`CONTACT_RATE_LIMIT`, default 5/min); honeypot field (`website`) silently drops bots with a fake success; submissions explicitly field-mapped. E2e: “H4”. |
+| H5 | Missing EU legal page | ✅✔ | `/impressum` page (§ 5 DDG, MStV responsibility, consumer-dispute placeholder requiring legal review) linked from the footer; privacy page updated with real retention windows, security measures, and self-service deletion; date bumped. No placeholder/lorem content anywhere. |
+| H6 | Event tab bar collapses into ragged rows on mobile | ✅✔ | Event layout tabs are now a single-row horizontally scrollable strip (edge-to-edge on mobile, natural on desktop). Playwright responsive suite passes at 390 px. |
+| H7 | Financial tables unusable on mobile | ✅✔ | Expenses and payments render as per-record cards below `md` (key figures + actions); budget/vendors/guests tables scroll horizontally. Verified by the responsive Playwright suite. |
+
+## Database migration
+
+`apps/api/prisma/migrations/20260722090000_phase9_remediation/migration.sql`:
+
+1. Drops `payments_idempotencyKey_key`, adds `payments_eventId_idempotencyKey_key` (per-event idempotency).
+2. Adds `DocumentScanStatus` enum + `documents.scanStatus` (default `pending`) + `scannedAt`.
+3. Creates `email_change_tokens`.
+
+Applied cleanly on a pristine database (`migrate deploy`: 4/4) and on the existing dev database. Existing documents keep `scanStatus=pending` and remain downloadable (only `infected`/`error` are quarantined).
+
+## New/changed API surface
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /auth/change-email` | Request email change (password-confirmed) |
+| `POST /auth/confirm-email-change` | Complete email change (public, token) |
+| `DELETE /auth/account` | Safe account deletion |
+| `POST /workspaces/:id/transfer-ownership` | Ownership transfer (owner, password) |
+| `node dist/worker.js` | Dedicated email worker process |
+
+All new routes are zod-validated via `@mep/validation` (`changeEmailSchema`, `confirmEmailChangeSchema`, `deleteAccountSchema`, `transferOwnershipSchema`) and rate-limited where public.
+
+## What intentionally did NOT change
+
+- **Money math** — integer minor units end-to-end (re-audited; untouched).
+- **Planner write access** to operational data (expenses, tasks, guests, …) — only admin/destructive actions were restricted (C5).
+- **Demo/deployment shapes** — the all-in-one demo Dockerfile runs the API in development mode on purpose (documented in `scripts/demo-start.sh`), because the production fail-fast gate correctly refuses localhost deployments.
