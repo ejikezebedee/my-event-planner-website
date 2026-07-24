@@ -107,19 +107,19 @@ describe("Financial Core (e2e)", () => {
     const paymentId = pay.body.payment.id;
 
     const key = `refund-e2e-${Date.now()}`;
-    const first = await agent.post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`).send({
+    const refundPayload = {
       amount: 1000,
       paidAt: new Date().toISOString(),
       method: "cash",
       idempotencyKey: key,
-    });
+    };
+    const first = await agent
+      .post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`)
+      .send(refundPayload);
     expect(first.status).toBe(201);
-    const replay = await agent.post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`).send({
-      amount: 1000,
-      paidAt: new Date().toISOString(),
-      method: "cash",
-      idempotencyKey: key,
-    });
+    const replay = await agent
+      .post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`)
+      .send(refundPayload);
     expect(replay.status).toBe(201);
     expect(replay.body.idempotentReplay).toBe(true);
     expect(String(replay.body.refund.id)).toBe(String(first.body.refund.id));

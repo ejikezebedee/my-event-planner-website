@@ -26,6 +26,9 @@ import request from "supertest";
 const BASE = process.env.API_BASE_URL ?? "http://localhost:4000";
 const GATE_BASE = process.env.GATE_API_BASE_URL ?? "http://localhost:4100";
 const LOG_PATH = process.env.API_LOG_PATH ?? "/tmp/api.log";
+const MAIL_LOG_PATHS = (process.env.MAIL_LOG_PATHS ?? `${LOG_PATH}:/tmp/worker.log`)
+  .split(":")
+  .filter(Boolean);
 const GATE_LOG_PATH = "/tmp/api-4100.log";
 
 const owner = request.agent(BASE); // workspace owner (user A)
@@ -41,14 +44,17 @@ type LinkKind = "verify-email" | "invite" | "confirm-email-change";
 async function emailedToken(
   kind: LinkKind,
   to: string,
-  logPath: string = LOG_PATH,
+  logPaths: string | string[] = MAIL_LOG_PATHS,
 ): Promise<string> {
+  const paths = Array.isArray(logPaths) ? logPaths : [logPaths];
   for (let attempt = 0; attempt < 24; attempt++) {
     let log = "";
-    try {
-      log = readFileSync(logPath, "utf8");
-    } catch {
-      // Log file may not exist yet — keep polling.
+    for (const path of paths) {
+      try {
+        log += `\n${readFileSync(path, "utf8")}`;
+      } catch {
+        // Log file may not exist yet — keep polling.
+      }
     }
     const entries = log
       .split("[console mail]")
@@ -364,10 +370,12 @@ describe("H4 — contact form honeypot silently drops bots", () => {
     // Give the (non-existent) mail a moment, then prove nothing was queued.
     await new Promise((r) => setTimeout(r, 500));
     let log = "";
-    try {
-      log = readFileSync(LOG_PATH, "utf8");
-    } catch {
-      // no log yet
+    for (const path of MAIL_LOG_PATHS) {
+      try {
+        log += `\n${readFileSync(path, "utf8")}`;
+      } catch {
+        // no log yet
+      }
     }
     expect(log).not.toContain(`Contact form: ${marker}`);
   });
@@ -500,7 +508,10 @@ describe("C4 — email verification gate (dedicated API instance)", () => {
   }, 30_000);
 
   it("after verification the same account gets full access", async () => {
-    const token = await emailedToken("verify-email", GATE_EMAIL, GATE_LOG_PATH);
+    const token = await emailedToken("verify-email", GATE_EMAIL, [
+      GATE_LOG_PATH,
+      ...MAIL_LOG_PATHS,
+    ]);
     const agent = request.agent(GATE_BASE);
     await agent.post("/api/v1/auth/login").send({ email: GATE_EMAIL, password: PASSWORD });
     const verify = await agent.post("/api/v1/auth/verify-email").send({ token });

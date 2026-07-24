@@ -14,7 +14,11 @@ import { readFileSync } from "fs";
 import request from "supertest";
 
 const BASE = process.env.API_BASE_URL ?? "http://localhost:4000";
-const LOG_PATH = process.env.API_LOG_PATH ?? "/tmp/api.log";
+const LOG_PATHS = (
+  process.env.MAIL_LOG_PATHS ?? `${process.env.API_LOG_PATH ?? "/tmp/api.log"}:/tmp/worker.log`
+)
+  .split(":")
+  .filter(Boolean);
 
 const owner = request.agent(BASE);
 const member = request.agent(BASE);
@@ -31,10 +35,12 @@ const PASSWORD = "Journey123!";
 async function emailedLink(kind: "verify-email" | "invite", to: string): Promise<string> {
   for (let attempt = 0; attempt < 20; attempt++) {
     let log = "";
-    try {
-      log = readFileSync(LOG_PATH, "utf8");
-    } catch {
-      // Log file may not exist yet — keep polling.
+    for (const path of LOG_PATHS) {
+      try {
+        log += `\n${readFileSync(path, "utf8")}`;
+      } catch {
+        // Log file may not exist yet — keep polling.
+      }
     }
     const entries = log
       .split("[console mail]")
