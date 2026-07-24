@@ -80,11 +80,11 @@ export class GuestsService {
       total: statRows.length,
       accepted: statRows.filter((g) => g.rsvpStatus === "accepted").length,
       declined: statRows.filter((g) => g.rsvpStatus === "declined").length,
-      pending: statRows.filter((g) => g.rsvpStatus === "pending" || g.rsvpStatus === "no_response").length,
-      totalAttending:
-        statRows
-          .filter((g) => g.rsvpStatus === "accepted")
-          .reduce((sum, g) => sum + 1 + g.accompanyingCount, 0),
+      pending: statRows.filter((g) => g.rsvpStatus === "pending" || g.rsvpStatus === "no_response")
+        .length,
+      totalAttending: statRows
+        .filter((g) => g.rsvpStatus === "accepted")
+        .reduce((sum, g) => sum + 1 + g.accompanyingCount, 0),
     };
     return { guests, groups, stats };
   }
@@ -156,19 +156,36 @@ export class GuestsService {
    * (lowercased first+last name, email when present); bad rows are reported
    * individually without aborting the import.
    */
-  async importCsv(userId: bigint, eventId: bigint, csvText: string, dryRun = false): Promise<ImportResult> {
+  async importCsv(
+    userId: bigint,
+    eventId: bigint,
+    csvText: string,
+    dryRun = false,
+  ): Promise<ImportResult> {
     const event = await this.access.assertEventWrite(userId, eventId);
     const rows = parseCsv(csvText);
-    if (rows.length < 2) return { imported: 0, duplicates: 0, errors: [{ row: 1, message: "No data rows found" }] };
+    if (rows.length < 2)
+      return { imported: 0, duplicates: 0, errors: [{ row: 1, message: "No data rows found" }] };
 
     const header = rows[0]!.map((h) => h.trim().toLowerCase());
     const colFirst = findColumnIndex(header, ["first name", "firstname", "first_name", "vorname"]);
-    const colLast = findColumnIndex(header, ["last name", "lastname", "last_name", "nachname", "surname"]);
+    const colLast = findColumnIndex(header, [
+      "last name",
+      "lastname",
+      "last_name",
+      "nachname",
+      "surname",
+    ]);
     const colEmail = findColumnIndex(header, ["email", "e-mail", "mail"]);
     const colPhone = findColumnIndex(header, ["phone", "telephone", "tel", "mobile"]);
     const colGroup = findColumnIndex(header, ["group", "gruppe", "category"]);
     const colHousehold = findColumnIndex(header, ["household", "family", "haushalt"]);
-    const colAccomp = findColumnIndex(header, ["accompanying", "accompanyingcount", "plus ones", "begleitung"]);
+    const colAccomp = findColumnIndex(header, [
+      "accompanying",
+      "accompanyingcount",
+      "plus ones",
+      "begleitung",
+    ]);
     const colDietary = findColumnIndex(header, ["dietary", "diet", "essen"]);
     const colNotes = findColumnIndex(header, ["notes", "note", "notizen"]);
 
@@ -185,7 +202,10 @@ export class GuestsService {
       select: { firstName: true, lastName: true, email: true },
     });
     const seen = new Set(
-      existing.map((g) => `${g.firstName.toLowerCase()}|${g.lastName.toLowerCase()}|${(g.email ?? "").toLowerCase()}`),
+      existing.map(
+        (g) =>
+          `${g.firstName.toLowerCase()}|${g.lastName.toLowerCase()}|${(g.email ?? "").toLowerCase()}`,
+      ),
     );
 
     const groups = new Map<string, bigint>();
@@ -215,12 +235,16 @@ export class GuestsService {
           groupId = cached;
         } else {
           // Dry runs never write — groups are only resolved, not created.
-          const found = await this.prisma.guestGroup.findFirst({ where: { eventId, name: groupName } });
+          const found = await this.prisma.guestGroup.findFirst({
+            where: { eventId, name: groupName },
+          });
           if (found) {
             groups.set(groupName.toLowerCase(), found.id);
             groupId = found.id;
           } else if (!dryRun) {
-            const group = await this.prisma.guestGroup.create({ data: { eventId, name: groupName } });
+            const group = await this.prisma.guestGroup.create({
+              data: { eventId, name: groupName },
+            });
             groups.set(groupName.toLowerCase(), group.id);
             groupId = group.id;
           }
@@ -260,7 +284,11 @@ export class GuestsService {
         action: "guests.import_csv",
         resourceType: "event",
         resourceId: eventId,
-        metadata: { imported: result.imported, duplicates: result.duplicates, errors: result.errors.length },
+        metadata: {
+          imported: result.imported,
+          duplicates: result.duplicates,
+          errors: result.errors.length,
+        },
       });
     }
     return result;
@@ -270,9 +298,29 @@ export class GuestsService {
   async importTemplate(userId: bigint, eventId: bigint): Promise<string> {
     await this.access.assertEventAccess(userId, eventId);
     return toCsv(
-      ["First Name", "Last Name", "Email", "Phone", "Group", "Household", "Accompanying", "Dietary", "Notes"],
       [
-        ["Jane", "Doe", "jane@example.com", "+49 170 1234567", "Family", "Doe family", "1", "Vegetarian", "Aunt of the bride"],
+        "First Name",
+        "Last Name",
+        "Email",
+        "Phone",
+        "Group",
+        "Household",
+        "Accompanying",
+        "Dietary",
+        "Notes",
+      ],
+      [
+        [
+          "Jane",
+          "Doe",
+          "jane@example.com",
+          "+49 170 1234567",
+          "Family",
+          "Doe family",
+          "1",
+          "Vegetarian",
+          "Aunt of the bride",
+        ],
         ["Max", "Smith", "", "", "Friends", "", "0", "", ""],
       ],
     );
@@ -286,11 +334,37 @@ export class GuestsService {
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     });
     return toCsv(
-      ["First Name", "Last Name", "Email", "Phone", "Group", "Household", "Accompanying", "Invitation", "RSVP", "Attendance", "Table", "Dietary", "Allergies", "Notes"],
+      [
+        "First Name",
+        "Last Name",
+        "Email",
+        "Phone",
+        "Group",
+        "Household",
+        "Accompanying",
+        "Invitation",
+        "RSVP",
+        "Attendance",
+        "Table",
+        "Dietary",
+        "Allergies",
+        "Notes",
+      ],
       guests.map((g) => [
-        g.firstName, g.lastName, g.email, g.phone, g.group?.name, g.household,
-        g.accompanyingCount, g.invitationStatus, g.rsvpStatus, g.attendanceStatus,
-        g.tableName, g.dietary, g.allergies, g.notes,
+        g.firstName,
+        g.lastName,
+        g.email,
+        g.phone,
+        g.group?.name,
+        g.household,
+        g.accompanyingCount,
+        g.invitationStatus,
+        g.rsvpStatus,
+        g.attendanceStatus,
+        g.tableName,
+        g.dietary,
+        g.allergies,
+        g.notes,
       ]),
     );
   }

@@ -29,23 +29,23 @@ cp .env.example .env
 
 Edit `.env` (used by `docker-compose.prod.yml` via `${VAR}` interpolation):
 
-| Variable | Notes |
-|---|---|
-| `POSTGRES_PASSWORD` | **Required.** Strong random password. |
-| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | **Required.** S3 credentials for document storage. |
-| `WEB_ORIGIN` / `APP_BASE_URL` | Your public web origin, e.g. `https://planner.example.com`. |
-| `NEXT_PUBLIC_API_URL` | Public API origin, e.g. `https://api.example.com`. **Baked into the web build** — set before building. |
-| `SESSION_COOKIE_SECURE` | Set `true` when serving over HTTPS. |
-| `SWAGGER_ENABLED` | API docs at `/docs`. Defaults to **off** in production. |
-| `SCHEDULER_ENABLED` | Hourly notification pass. Set `false` to disable. |
-| `AUTH_REGISTER_RATE_LIMIT` | Registration/password-request throttle per minute (default 5). |
-| `AUTH_LOGIN_RATE_LIMIT` | Login/password-reset throttle per minute (default 10). |
-| `EMAIL_PROVIDER` | `resend` (+ `RESEND_API_KEY`), `smtp` (+ `SMTP_URL`), or `console`. |
-| `EMAIL_FROM` | Sender address for transactional mail. |
-| `CONTACT_EMAIL` | Inbox that receives contact-form submissions (default `contact@your-domain.example`). |
-| `CONTACT_RATE_LIMIT` | Contact-form submissions per minute per client (default 5). |
-| `REQUIRE_EMAIL_VERIFICATION` | Blocks app usage until the email address is verified. **On and enforced in production** (cannot be disabled there). |
-| `MALWARE_SCAN_URL` | Optional HTTP bridge for malware scanning of uploads (e.g. a ClamAV REST wrapper; expects `{"verdict":"clean"\|"infected"}`). Empty = no-op scanner. |
+| Variable                                  | Notes                                                                                                                                                |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_PASSWORD`                       | **Required.** Strong random password.                                                                                                                |
+| `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | **Required.** S3 credentials for document storage.                                                                                                   |
+| `WEB_ORIGIN` / `APP_BASE_URL`             | Your public web origin, e.g. `https://planner.example.com`.                                                                                          |
+| `NEXT_PUBLIC_API_URL`                     | Public API origin, e.g. `https://api.example.com`. **Baked into the web build** — set before building.                                               |
+| `SESSION_COOKIE_SECURE`                   | Set `true` when serving over HTTPS.                                                                                                                  |
+| `SWAGGER_ENABLED`                         | API docs at `/docs`. Defaults to **off** in production.                                                                                              |
+| `SCHEDULER_ENABLED`                       | Hourly notification pass. Set `false` to disable.                                                                                                    |
+| `AUTH_REGISTER_RATE_LIMIT`                | Registration/password-request throttle per minute (default 5).                                                                                       |
+| `AUTH_LOGIN_RATE_LIMIT`                   | Login/password-reset throttle per minute (default 10).                                                                                               |
+| `EMAIL_PROVIDER`                          | `resend` (+ `RESEND_API_KEY`), `smtp` (+ `SMTP_URL`), or `console`.                                                                                  |
+| `EMAIL_FROM`                              | Sender address for transactional mail.                                                                                                               |
+| `CONTACT_EMAIL`                           | Inbox that receives contact-form submissions (default `contact@your-domain.example`).                                                                |
+| `CONTACT_RATE_LIMIT`                      | Contact-form submissions per minute per client (default 5).                                                                                          |
+| `REQUIRE_EMAIL_VERIFICATION`              | Blocks app usage until the email address is verified. **On and enforced in production** (cannot be disabled there).                                  |
+| `MALWARE_SCAN_URL`                        | Optional HTTP bridge for malware scanning of uploads (e.g. a ClamAV REST wrapper; expects `{"verdict":"clean"\|"infected"}`). Empty = no-op scanner. |
 
 The API container reads the same variables (see `docker-compose.prod.yml`). For local-disk storage instead of MinIO, set `STORAGE_DRIVER=local` and add a volume for `/app/apps/api/uploads`.
 
@@ -116,6 +116,6 @@ docker compose -f docker-compose.prod.yml up -d --build
 - **Uploads**: limited to `MAX_UPLOAD_MB` (default 10 MB); executable extensions are blocked.
 - **Scaling**: the stack is single-node by design. To scale later, move PostgreSQL/Redis/S3 to managed services and run multiple `api` replicas behind the proxy (stateless, cookie sessions live in PostgreSQL).
 
-
 ## Reverse proxy
+
 Set `TRUST_PROXY` to the narrowest trusted proxy range supported by your platform (for example `loopback, linklocal, uniquelocal`). Never use an unrestricted value unless the network boundary is controlled.

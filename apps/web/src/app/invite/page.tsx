@@ -30,7 +30,6 @@ function InviteAccept() {
           setMessage(err instanceof Error ? err.message : "Could not accept the invitation");
         }
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -39,16 +38,22 @@ function InviteAccept() {
         <CardTitle>Workspace invitation</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {state === "pending" && <p className="text-sm text-muted-foreground">Accepting your invitation…</p>}
+        {state === "pending" && (
+          <p className="text-sm text-muted-foreground">Accepting your invitation…</p>
+        )}
         {state === "ok" && (
           <>
             <p className="text-sm">You have joined the workspace.</p>
-            <Button className="w-full" onClick={() => router.push("/app")}>Open app</Button>
+            <Button className="w-full" onClick={() => router.push("/app")}>
+              Open app
+            </Button>
           </>
         )}
         {state === "unauthenticated" && (
           <>
-            <p className="text-sm">Please log in (or register with the invited email address) to accept this invitation.</p>
+            <p className="text-sm">
+              Please log in (or register with the invited email address) to accept this invitation.
+            </p>
             <Button className="w-full" asChild>
               <Link href={`/login?next=/invite?token=${encodeURIComponent(token)}`}>Log in</Link>
             </Button>

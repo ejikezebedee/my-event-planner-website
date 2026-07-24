@@ -40,13 +40,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) }),
+    request<T>(path, {
+      method: "POST",
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
   patch: <T>(path: string, body: unknown) =>
     request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
   put: <T>(path: string, body: unknown) =>
     request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
   delete: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "DELETE", body: body === undefined ? undefined : JSON.stringify(body) }),
+    request<T>(path, {
+      method: "DELETE",
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
   /** Authenticated file download → triggers a browser download. */
   download: async (path: string, filename: string) => {
     const res = await fetch(`${API_URL}/api/v1${path}`, { credentials: "include" });

@@ -26,7 +26,11 @@ function Verify() {
     <Card className="w-full max-w-md text-center">
       <CardHeader>
         <CardTitle>
-          {state === "pending" ? "Verifying…" : state === "ok" ? "Email verified" : "Verification failed"}
+          {state === "pending"
+            ? "Verifying…"
+            : state === "ok"
+              ? "Email verified"
+              : "Verification failed"}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -38,7 +42,9 @@ function Verify() {
               : "This verification link is invalid or has expired."}
         </p>
         <Button className="w-full" asChild>
-          <Link href={state === "ok" ? "/app" : "/login"}>{state === "ok" ? "Open app" : "Back to login"}</Link>
+          <Link href={state === "ok" ? "/app" : "/login"}>
+            {state === "ok" ? "Open app" : "Back to login"}
+          </Link>
         </Button>
       </CardContent>
     </Card>

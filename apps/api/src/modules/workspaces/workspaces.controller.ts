@@ -32,7 +32,10 @@ export class WorkspacesController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(workspaceUpsertSchema)) body: unknown,
   ) {
-    return this.workspaces.create(user.id, body as { name: string; currency?: string; timezone?: string });
+    return this.workspaces.create(
+      user.id,
+      body as { name: string; currency?: string; timezone?: string },
+    );
   }
 
   @Patch(":id")
@@ -41,7 +44,11 @@ export class WorkspacesController {
     @Param("id", ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(workspaceUpsertSchema.partial())) body: unknown,
   ) {
-    return this.workspaces.update(user.id, BigInt(id), body as { name?: string; currency?: string; timezone?: string });
+    return this.workspaces.update(
+      user.id,
+      BigInt(id),
+      body as { name?: string; currency?: string; timezone?: string },
+    );
   }
 
   @Get(":id/members")
@@ -73,9 +80,15 @@ export class WorkspacesController {
     @CurrentUser() user: AuthUser,
     @Param("id", ParseIntPipe) id: number,
     @Param("memberId", ParseIntPipe) memberId: number,
-    @Body(new ZodValidationPipe(z.object({ role: z.enum(["admin", "planner", "viewer"]) }))) body: unknown,
+    @Body(new ZodValidationPipe(z.object({ role: z.enum(["admin", "planner", "viewer"]) })))
+    body: unknown,
   ) {
-    return this.workspaces.updateMemberRole(user.id, BigInt(id), BigInt(memberId), (body as { role: WorkspaceRole }).role);
+    return this.workspaces.updateMemberRole(
+      user.id,
+      BigInt(id),
+      BigInt(memberId),
+      (body as { role: WorkspaceRole }).role,
+    );
   }
 
   @HttpCode(200)
@@ -86,7 +99,12 @@ export class WorkspacesController {
     @Body(new ZodValidationPipe(transferOwnershipSchema)) body: unknown,
   ) {
     const input = body as { memberId: number; password: string };
-    return this.workspaces.transferOwnership(user.id, BigInt(id), BigInt(input.memberId), input.password);
+    return this.workspaces.transferOwnership(
+      user.id,
+      BigInt(id),
+      BigInt(input.memberId),
+      input.password,
+    );
   }
 
   @HttpCode(200)

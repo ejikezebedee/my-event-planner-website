@@ -21,7 +21,14 @@ test("capture screenshots", async ({ page }) => {
   await page.goto("/app/events/1");
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${OUT}/04-event-overview.png`, fullPage: true });
-  for (const [slug, name] of [["budget","05"],["expenses","06"],["payments","07"],["guests","08"],["tasks","09"],["reports","10"]] as const) {
+  for (const [slug, name] of [
+    ["budget", "05"],
+    ["expenses", "06"],
+    ["payments", "07"],
+    ["guests", "08"],
+    ["tasks", "09"],
+    ["reports", "10"],
+  ] as const) {
     await page.goto(`/app/events/1/${slug}`);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `${OUT}/${name}-${slug}.png`, fullPage: true });

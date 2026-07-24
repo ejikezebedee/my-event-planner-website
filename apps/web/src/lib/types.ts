@@ -215,7 +215,10 @@ export interface NotificationPrefs {
 export interface DashboardData {
   events: { total: number; upcoming: EventSummary[] };
   finances: { budget: number; actual: number; paid: number };
-  tasks: { open: number; upcoming: { id: number; title: string; dueAt: string; eventId: number; priority: string }[] };
+  tasks: {
+    open: number;
+    upcoming: { id: number; title: string; dueAt: string; eventId: number; priority: string }[];
+  };
   guests: { total: number };
   alerts: { overdueExpenses: number };
 }

@@ -6,9 +6,24 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader,
-  DialogTitle, DialogTrigger, Input, Label, Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue, Skeleton,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
 } from "@mep/ui";
 import { EVENT_TYPES, labelize } from "@mep/types";
 import { api, ApiError } from "@/lib/api";
@@ -21,7 +36,13 @@ import { EmptyState } from "@/components/empty-state";
 
 function NewEventDialog({ workspaceId }: { workspaceId: number }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", type: "other", startAt: "", venueName: "", expectedGuests: "" });
+  const [form, setForm] = useState({
+    name: "",
+    type: "other",
+    startAt: "",
+    venueName: "",
+    expectedGuests: "",
+  });
   const [budget, setBudget] = useState(0);
   const queryClient = useQueryClient();
   const create = useMutation({
@@ -46,10 +67,14 @@ function NewEventDialog({ workspaceId }: { workspaceId: number }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button><Plus className="mr-2 h-4 w-4" /> New event</Button>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> New event
+        </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Create event</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Create event</DialogTitle>
+        </DialogHeader>
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -59,31 +84,57 @@ function NewEventDialog({ workspaceId }: { workspaceId: number }) {
         >
           <div className="space-y-1.5">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input
+              id="name"
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Type</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{labelize(t)}</SelectItem>)}
+                  {EVENT_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {labelize(t)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="startAt">Date</Label>
-              <Input id="startAt" type="date" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value })} />
+              <Input
+                id="startAt"
+                type="date"
+                value={form.startAt}
+                onChange={(e) => setForm({ ...form, startAt: e.target.value })}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="venue">Venue</Label>
-              <Input id="venue" value={form.venueName} onChange={(e) => setForm({ ...form, venueName: e.target.value })} />
+              <Input
+                id="venue"
+                value={form.venueName}
+                onChange={(e) => setForm({ ...form, venueName: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="guests">Expected guests</Label>
-              <Input id="guests" type="number" min={0} value={form.expectedGuests} onChange={(e) => setForm({ ...form, expectedGuests: e.target.value })} />
+              <Input
+                id="guests"
+                type="number"
+                min={0}
+                value={form.expectedGuests}
+                onChange={(e) => setForm({ ...form, expectedGuests: e.target.value })}
+              />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -112,7 +163,9 @@ export default function EventsPage() {
       />
       {events.isPending && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-40" />
+          ))}
         </div>
       )}
       {events.data && events.data.length === 0 && (
@@ -133,7 +186,8 @@ export default function EventsPage() {
                 <StatusBadge status={event.status} />
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
-                {event._count?.expenses ?? 0} expenses · {event._count?.guests ?? 0} guests · {event._count?.tasks ?? 0} tasks
+                {event._count?.expenses ?? 0} expenses · {event._count?.guests ?? 0} guests ·{" "}
+                {event._count?.tasks ?? 0} tasks
               </CardContent>
             </Card>
           </Link>

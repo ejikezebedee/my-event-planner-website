@@ -4,12 +4,7 @@
 // source key, so updates to a record can never produce duplicate entries.
 
 export type CalendarKind =
-  | "timeline"
-  | "task"
-  | "expense_due"
-  | "payment_due"
-  | "event"
-  | "vendor_service";
+  "timeline" | "task" | "expense_due" | "payment_due" | "event" | "vendor_service";
 
 export interface CalendarItem {
   /** Stable dedupe key, e.g. "task:42", "expense:7:due". */

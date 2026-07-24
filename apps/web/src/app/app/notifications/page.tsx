@@ -48,7 +48,8 @@ export default function NotificationsPage() {
     onError: () => toast.error("Could not save preferences"),
   });
 
-  if (notifications.isPending || !notifications.data || !prefs.data) return <Skeleton className="h-96" />;
+  if (notifications.isPending || !notifications.data || !prefs.data)
+    return <Skeleton className="h-96" />;
 
   const toggleType = (type: string, enabled: boolean) => {
     savePrefs.mutate({ ...prefs.data!, types: { ...prefs.data!.types, [type]: enabled } });
@@ -65,7 +66,9 @@ export default function NotificationsPage() {
         }
       />
       <div className="space-y-2">
-        {notifications.data.length === 0 && <p className="text-sm text-muted-foreground">No notifications.</p>}
+        {notifications.data.length === 0 && (
+          <p className="text-sm text-muted-foreground">No notifications.</p>
+        )}
         {notifications.data.map((n) => (
           <div
             key={n.id}
@@ -74,7 +77,9 @@ export default function NotificationsPage() {
             <div>
               <p className="font-medium">
                 {n.title}
-                <span className="ml-2 text-xs font-normal text-muted-foreground">{labelize(n.type)}</span>
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {labelize(n.type)}
+                </span>
               </p>
               {n.body && <p className="text-sm text-muted-foreground">{n.body}</p>}
               <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(n.createdAt)}</p>
@@ -86,11 +91,23 @@ export default function NotificationsPage() {
             </div>
             <div className="flex gap-1">
               {!n.readAt && (
-                <Button size="icon" variant="ghost" title="Mark as read" aria-label={`Mark "${n.title}" as read`} onClick={() => markRead.mutate(n.id)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Mark as read"
+                  aria-label={`Mark "${n.title}" as read`}
+                  onClick={() => markRead.mutate(n.id)}
+                >
                   <Check className="h-4 w-4" />
                 </Button>
               )}
-              <Button size="icon" variant="ghost" title="Delete" aria-label={`Delete "${n.title}"`} onClick={() => remove.mutate(n.id)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                title="Delete"
+                aria-label={`Delete "${n.title}"`}
+                onClick={() => remove.mutate(n.id)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>

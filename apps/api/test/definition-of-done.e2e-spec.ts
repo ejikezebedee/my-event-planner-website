@@ -118,7 +118,9 @@ describe("Definition of Done — complete user workflow", () => {
   });
 
   it("step 8 — create budget categories (with items)", async () => {
-    const cat = await owner.post(`/api/v1/events/${eventId}/budget/categories`).send({ name: "Venue" });
+    const cat = await owner
+      .post(`/api/v1/events/${eventId}/budget/categories`)
+      .send({ name: "Venue" });
     expect(cat.status).toBe(201);
     categoryId = cat.body.id;
     const item = await owner
@@ -145,7 +147,8 @@ describe("Definition of Done — complete user workflow", () => {
       .send({ firstName: "Ada", lastName: "Guest", email: "ada@example.com" });
     expect(one.status).toBe(201);
 
-    const csv = "firstName,lastName,email\nCarl,Importer,carl@example.com\nDana,Importer,dana@example.com";
+    const csv =
+      "firstName,lastName,email\nCarl,Importer,carl@example.com\nDana,Importer,dana@example.com";
     const imported = await owner.post(`/api/v1/events/${eventId}/guests/import`).send({ csv });
     expect(imported.status).toBe(200);
     expect(imported.body.imported).toBe(2);
@@ -155,9 +158,11 @@ describe("Definition of Done — complete user workflow", () => {
   });
 
   it("step 12 — add event tasks", async () => {
-    const task = await owner
-      .post(`/api/v1/events/${eventId}/tasks`)
-      .send({ title: "Confirm menu", priority: "high", dueAt: new Date(Date.now() + 86400000).toISOString() });
+    const task = await owner.post(`/api/v1/events/${eventId}/tasks`).send({
+      title: "Confirm menu",
+      priority: "high",
+      dueAt: new Date(Date.now() + 86400000).toISOString(),
+    });
     expect(task.status).toBe(201);
     taskId = task.body.id;
   });
@@ -191,14 +196,12 @@ describe("Definition of Done — complete user workflow", () => {
   });
 
   it("step 13 — assign a task to the collaborator", async () => {
-    const res = await owner
-      .patch(`/api/v1/events/${eventId}/tasks/${taskId}`)
-      .send({
-        title: "Confirm menu",
-        assigneeId: memberUserId,
-        // PATCH is full-state: resend the due date so it is preserved.
-        dueAt: new Date(Date.now() + 86400000).toISOString(),
-      });
+    const res = await owner.patch(`/api/v1/events/${eventId}/tasks/${taskId}`).send({
+      title: "Confirm menu",
+      assigneeId: memberUserId,
+      // PATCH is full-state: resend the due date so it is preserved.
+      dueAt: new Date(Date.now() + 86400000).toISOString(),
+    });
     expect(res.status).toBe(200);
     const tasks = await owner.get(`/api/v1/events/${eventId}/tasks`);
     const assigned = tasks.body.find((t: { id: number }) => Number(t.id) === taskId);
@@ -258,21 +261,26 @@ describe("Definition of Done — complete user workflow", () => {
   });
 
   it("step 21 — view the event timeline", async () => {
-    const entry = await owner
-      .post(`/api/v1/events/${eventId}/timeline`)
-      .send({ title: "Venue walkthrough", startAt: new Date(Date.now() + 2 * 86400000).toISOString() });
+    const entry = await owner.post(`/api/v1/events/${eventId}/timeline`).send({
+      title: "Venue walkthrough",
+      startAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+    });
     expect(entry.status).toBe(201);
     const list = await owner.get(`/api/v1/events/${eventId}/timeline`);
     expect(list.body.some((t: { title: string }) => t.title === "Venue walkthrough")).toBe(true);
     // Auto items from records appear alongside manual entries.
-    expect(list.body.some((t: { source?: string }) => t.source && t.source !== "manual")).toBe(true);
+    expect(list.body.some((t: { source?: string }) => t.source && t.source !== "manual")).toBe(
+      true,
+    );
   });
 
   it("step 22 — receive relevant notifications", async () => {
     const gen = await owner.post("/api/v1/notifications/generate");
     expect(gen.status).toBe(200);
     const list = await owner.get("/api/v1/notifications");
-    const mine = list.body.filter((n: { eventId: number | string }) => Number(n.eventId) === eventId);
+    const mine = list.body.filter(
+      (n: { eventId: number | string }) => Number(n.eventId) === eventId,
+    );
     // Event starts in 5 days → event_approaching; task due tomorrow → task_due_soon.
     expect(mine.some((n: { type: string }) => n.type === "event_approaching")).toBe(true);
     expect(mine.some((n: { type: string }) => n.type === "task_due_soon")).toBe(true);

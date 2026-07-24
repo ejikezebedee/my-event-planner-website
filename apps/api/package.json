@@ -36,7 +36,7 @@
     "csv-stringify": "^6.5.2",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.2",
-    "nodemailer": "^6.9.16",
+    "nodemailer": "^9.0.3",
     "pdfkit": "^0.15.2",
     "reflect-metadata": "^0.2.2",
     "resend": "^4.0.1",
@@ -44,6 +44,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@mep/eslint-config": "workspace:*",
     "@nestjs/cli": "^10.4.9",
     "@nestjs/testing": "^10.4.15",
     "@types/cookie-parser": "^1.4.8",
@@ -57,7 +58,7 @@
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.6"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

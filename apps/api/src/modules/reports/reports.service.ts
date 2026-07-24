@@ -41,7 +41,10 @@ export class ReportsService {
     switch (type) {
       case "budget_summary": {
         const [categories, items, expenses] = await Promise.all([
-          this.prisma.budgetCategory.findMany({ where: { eventId }, orderBy: { sortOrder: "asc" } }),
+          this.prisma.budgetCategory.findMany({
+            where: { eventId },
+            orderBy: { sortOrder: "asc" },
+          }),
           this.prisma.budgetItem.findMany({ where: { eventId } }),
           this.prisma.expense.findMany({
             where: { eventId, status: { notIn: ["cancelled"] } },
@@ -49,23 +52,45 @@ export class ReportsService {
           }),
         ]);
         const rows: (string | number)[][] = [];
-        let tp = 0n, ta = 0n, td = 0n;
+        let tp = 0n,
+          ta = 0n,
+          td = 0n;
         for (const cat of categories) {
-          const planned = items.filter((i) => i.categoryId === cat.id).reduce((s, i) => s + i.plannedAmount, 0n);
+          const planned = items
+            .filter((i) => i.categoryId === cat.id)
+            .reduce((s, i) => s + i.plannedAmount, 0n);
           const catExpenses = expenses.filter((e) => e.categoryId === cat.id);
           const actual = catExpenses.reduce((s, e) => s + e.totalAmount, 0n);
           const paid = catExpenses.reduce(
             (s, e) =>
-              s + e.payments.reduce((ps, p) => (p.type === "refund" ? ps - p.amount : ps + p.amount), 0n),
+              s +
+              e.payments.reduce(
+                (ps, p) => (p.type === "refund" ? ps - p.amount : ps + p.amount),
+                0n,
+              ),
             0n,
           );
-          tp += planned; ta += actual; td += paid;
-          rows.push([cat.name, fmt(planned, currency), fmt(actual, currency), fmt(paid, currency), fmt(planned - actual, currency)]);
+          tp += planned;
+          ta += actual;
+          td += paid;
+          rows.push([
+            cat.name,
+            fmt(planned, currency),
+            fmt(actual, currency),
+            fmt(paid, currency),
+            fmt(planned - actual, currency),
+          ]);
         }
         return {
           columns: ["Category", "Planned", "Actual", "Paid", "Remaining"],
           rows,
-          totalsRow: ["Total", fmt(tp, currency), fmt(ta, currency), fmt(td, currency), fmt(tp - ta, currency)],
+          totalsRow: [
+            "Total",
+            fmt(tp, currency),
+            fmt(ta, currency),
+            fmt(td, currency),
+            fmt(tp - ta, currency),
+          ],
           meta: { event: event.name, budgetAmount: fmt(event.budgetAmount, currency) },
         };
       }
@@ -107,7 +132,16 @@ export class ReportsService {
           orderBy: { paidAt: "asc" },
         });
         return {
-          columns: ["Expense", "Type", "Paid At", "Amount", "Method", "Reference", "State", "Reversal Reason"],
+          columns: [
+            "Expense",
+            "Type",
+            "Paid At",
+            "Amount",
+            "Method",
+            "Reference",
+            "State",
+            "Reversal Reason",
+          ],
           rows: payments.map((p) => [
             p.expense.title,
             p.type,
@@ -129,7 +163,16 @@ export class ReportsService {
           orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
         });
         return {
-          columns: ["Name", "Email", "Group", "Accompanying", "Invitation", "RSVP", "Attendance", "Table"],
+          columns: [
+            "Name",
+            "Email",
+            "Group",
+            "Accompanying",
+            "Invitation",
+            "RSVP",
+            "Attendance",
+            "Table",
+          ],
           rows: guests.map((g) => [
             `${g.firstName} ${g.lastName}`,
             g.email ?? "",
@@ -222,7 +265,13 @@ export class ReportsService {
     if (report.totalsRow) {
       const cells = report.columns
         .map((col, i) => ({ col, value: report.totalsRow![i] }))
-        .filter((c) => c.value !== "" && c.value != null && c.col.toLowerCase() !== "expense" && c.col.toLowerCase() !== "task");
+        .filter(
+          (c) =>
+            c.value !== "" &&
+            c.value != null &&
+            c.col.toLowerCase() !== "expense" &&
+            c.col.toLowerCase() !== "task",
+        );
       for (const c of cells.slice(0, 6)) lines.push(`Total ${c.col}: ${c.value}`);
     }
     return lines;

@@ -133,7 +133,12 @@ export class AuthService {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
-    await this.audit.log({ actorId: userId, action: "auth.change_password", resourceType: "user", resourceId: userId });
+    await this.audit.log({
+      actorId: userId,
+      action: "auth.change_password",
+      resourceType: "user",
+      resourceId: userId,
+    });
   }
 
   /** Always succeeds from the caller's perspective (generic response). */
@@ -142,7 +147,11 @@ export class AuthService {
     if (!user) return;
     const token = generateToken(32);
     await this.prisma.passwordResetToken.create({
-      data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + RESET_TTL_MS),
+      },
     });
     const link = `${env.APP_BASE_URL}/reset-password?token=${token}`;
     await this.queue.enqueueEmail({
@@ -160,7 +169,10 @@ export class AuthService {
       throw new UnauthorizedException("This reset link is invalid or has expired");
     }
     await this.prisma.$transaction([
-      this.prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+      this.prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
       this.prisma.user.update({
         where: { id: record.userId },
         data: { passwordHash: await hashPassword(newPassword) },
@@ -170,13 +182,22 @@ export class AuthService {
         data: { revokedAt: new Date() },
       }),
     ]);
-    await this.audit.log({ actorId: record.userId, action: "auth.reset_password", resourceType: "user", resourceId: record.userId });
+    await this.audit.log({
+      actorId: record.userId,
+      action: "auth.reset_password",
+      resourceType: "user",
+      resourceId: record.userId,
+    });
   }
 
   async sendVerificationEmail(userId: bigint, email: string) {
     const token = generateToken(32);
     await this.prisma.emailVerificationToken.create({
-      data: { userId, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + VERIFY_TTL_MS) },
+      data: {
+        userId,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + VERIFY_TTL_MS),
+      },
     });
     const link = `${env.APP_BASE_URL}/verify-email?token=${token}`;
     await this.queue.enqueueEmail({
@@ -194,8 +215,14 @@ export class AuthService {
       throw new UnauthorizedException("This verification link is invalid or has expired");
     }
     await this.prisma.$transaction([
-      this.prisma.emailVerificationToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
-      this.prisma.user.update({ where: { id: record.userId }, data: { emailVerifiedAt: new Date() } }),
+      this.prisma.emailVerificationToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { emailVerifiedAt: new Date() },
+      }),
     ]);
   }
 
@@ -300,9 +327,23 @@ export class AuthService {
       select: { workspaceId: true, role: true, createdAt: true },
     });
     const workspaceIds = memberships.map((membership) => membership.workspaceId);
-    const events = await this.prisma.event.findMany({ where: { workspaceId: { in: workspaceIds } } });
+    const events = await this.prisma.event.findMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
     const eventIds = events.map((event) => event.id);
-    const [workspaces, budgetCategories, budgetItems, expenses, payments, vendors, guests, tasks, notifications, documents, auditLogs] = await Promise.all([
+    const [
+      workspaces,
+      budgetCategories,
+      budgetItems,
+      expenses,
+      payments,
+      vendors,
+      guests,
+      tasks,
+      notifications,
+      documents,
+      auditLogs,
+    ] = await Promise.all([
       this.prisma.workspace.findMany({ where: { id: { in: workspaceIds } } }),
       this.prisma.budgetCategory.findMany({ where: { eventId: { in: eventIds } } }),
       this.prisma.budgetItem.findMany({ where: { eventId: { in: eventIds } } }),
@@ -314,9 +355,22 @@ export class AuthService {
       this.prisma.notification.findMany({ where: { userId } }),
       this.prisma.document.findMany({
         where: { workspaceId: { in: workspaceIds } },
-        select: { id: true, workspaceId: true, eventId: true, category: true, originalName: true, mimeType: true, sizeBytes: true, description: true, scanStatus: true, createdAt: true },
+        select: {
+          id: true,
+          workspaceId: true,
+          eventId: true,
+          category: true,
+          originalName: true,
+          mimeType: true,
+          sizeBytes: true,
+          description: true,
+          scanStatus: true,
+          createdAt: true,
+        },
       }),
-      this.prisma.auditLog.findMany({ where: { OR: [{ actorId: userId }, { workspaceId: { in: workspaceIds } }] } }),
+      this.prisma.auditLog.findMany({
+        where: { OR: [{ actorId: userId }, { workspaceId: { in: workspaceIds } }] },
+      }),
     ]);
     return {
       exportedAt: new Date().toISOString(),
@@ -383,7 +437,9 @@ export class AuthService {
       });
     });
 
-    await Promise.allSettled(storedDocuments.map((document) => this.storage.remove(document.storageKey)));
+    await Promise.allSettled(
+      storedDocuments.map((document) => this.storage.remove(document.storageKey)),
+    );
   }
 
   async listSessions(userId: bigint) {

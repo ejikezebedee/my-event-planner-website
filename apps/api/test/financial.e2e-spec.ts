@@ -107,13 +107,19 @@ describe("Financial Core (e2e)", () => {
     const paymentId = pay.body.payment.id;
 
     const key = `refund-e2e-${Date.now()}`;
-    const first = await agent
-      .post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`)
-      .send({ amount: 1000, paidAt: new Date().toISOString(), method: "cash", idempotencyKey: key });
+    const first = await agent.post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`).send({
+      amount: 1000,
+      paidAt: new Date().toISOString(),
+      method: "cash",
+      idempotencyKey: key,
+    });
     expect(first.status).toBe(201);
-    const replay = await agent
-      .post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`)
-      .send({ amount: 1000, paidAt: new Date().toISOString(), method: "cash", idempotencyKey: key });
+    const replay = await agent.post(`/api/v1/events/${eventId}/payments/${paymentId}/refund`).send({
+      amount: 1000,
+      paidAt: new Date().toISOString(),
+      method: "cash",
+      idempotencyKey: key,
+    });
     expect(replay.status).toBe(201);
     expect(replay.body.idempotentReplay).toBe(true);
     expect(String(replay.body.refund.id)).toBe(String(first.body.refund.id));
@@ -165,8 +171,18 @@ describe("Financial Core (e2e)", () => {
   it("searches, filters and sorts expenses", async () => {
     // Run-unique marker: the database persists between runs.
     const marker = `Sortable${Date.now()}`;
-    await createExpense({ title: `${marker} Alpha`, totalAmount: 1000, subtotal: 1000, taxAmount: 0 });
-    await createExpense({ title: `${marker} Beta`, totalAmount: 9000, subtotal: 9000, taxAmount: 0 });
+    await createExpense({
+      title: `${marker} Alpha`,
+      totalAmount: 1000,
+      subtotal: 1000,
+      taxAmount: 0,
+    });
+    await createExpense({
+      title: `${marker} Beta`,
+      totalAmount: 9000,
+      subtotal: 9000,
+      taxAmount: 0,
+    });
 
     const search = await agent.get(`/api/v1/events/${eventId}/expenses?q=${marker}`);
     expect(search.status).toBe(200);
@@ -256,14 +272,10 @@ describe("Financial Core (e2e)", () => {
     expect(String(upload.body.expenseId)).toBe(String(expenseId));
     expect(String(upload.body.paymentId)).toBe(String(paymentId));
 
-    const filtered = await agent.get(
-      `/api/v1/events/${eventId}/documents?expenseId=${expenseId}`,
-    );
+    const filtered = await agent.get(`/api/v1/events/${eventId}/documents?expenseId=${expenseId}`);
     expect(filtered.body.length).toBe(1);
 
-    const byPayment = await agent.get(
-      `/api/v1/events/${eventId}/documents?paymentId=${paymentId}`,
-    );
+    const byPayment = await agent.get(`/api/v1/events/${eventId}/documents?paymentId=${paymentId}`);
     expect(byPayment.body.length).toBe(1);
 
     // Foreign links are rejected

@@ -33,7 +33,10 @@ export class EventsController {
   }
 
   @Post()
-  create(@CurrentUser() user: AuthUser, @Body(new ZodValidationPipe(eventUpsertSchema)) body: never) {
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(eventUpsertSchema)) body: never,
+  ) {
     return this.events.create(user.id, body);
   }
 
@@ -67,7 +70,11 @@ export class EventsController {
   addMember(
     @CurrentUser() user: AuthUser,
     @Param("id", ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(z.object({ userId: z.number().int().positive(), role: z.enum(["planner", "viewer"]) })))
+    @Body(
+      new ZodValidationPipe(
+        z.object({ userId: z.number().int().positive(), role: z.enum(["planner", "viewer"]) }),
+      ),
+    )
     body: { userId: number; role: "planner" | "viewer" },
   ) {
     return this.events.addMember(user.id, BigInt(id), BigInt(body.userId), body.role);

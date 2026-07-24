@@ -36,8 +36,7 @@ export function setSelectedWorkspaceId(id: number) {
 export function useCurrentWorkspace() {
   const query = useWorkspaces();
   const selectedId = typeof window !== "undefined" ? getSelectedWorkspaceId() : null;
-  const current =
-    query.data?.find((w) => w.id === selectedId) ?? query.data?.[0] ?? null;
+  const current = query.data?.find((w) => w.id === selectedId) ?? query.data?.[0] ?? null;
   return { ...query, current };
 }
 

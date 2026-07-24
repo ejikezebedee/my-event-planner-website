@@ -54,9 +54,7 @@ export class CalendarService {
 
     const feeds = await Promise.all(events.map((e) => this.feedForEvent(e.id, from, to)));
     return feeds
-      .flatMap((items, idx) =>
-        items.map((item) => ({ ...item, eventId: String(events[idx]!.id) })),
-      )
+      .flatMap((items, idx) => items.map((item) => ({ ...item, eventId: String(events[idx]!.id) })))
       .sort((a, b) => a.startAt.localeCompare(b.startAt));
   }
 }

@@ -66,7 +66,11 @@ export function renderTablePdf(table: PdfTable): Promise<Buffer> {
         y = doc.page.margins.top;
       }
       y += 16;
-      doc.font("Helvetica-Bold").fontSize(11).fillColor("#000000").text("Summary", doc.page.margins.left, y);
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(11)
+        .fillColor("#000000")
+        .text("Summary", doc.page.margins.left, y);
       y += 18;
       doc.font("Helvetica").fontSize(9).fillColor("#333333");
       for (const line of table.summary) {

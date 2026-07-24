@@ -161,9 +161,10 @@ describe("Operational Modules (e2e)", () => {
     expect(template.text).toContain("Jane,Doe");
 
     const marker = `DryRun${Date.now()}`;
-    const preview = await agent
-      .post(`/api/v1/events/${eventId}/guests/import`)
-      .send({ csv: `First Name,Last Name\n${marker},Person\nBad Row Without Columns,`, dryRun: true });
+    const preview = await agent.post(`/api/v1/events/${eventId}/guests/import`).send({
+      csv: `First Name,Last Name\n${marker},Person\nBad Row Without Columns,`,
+      dryRun: true,
+    });
     expect(preview.status).toBe(200);
     expect(preview.body.imported).toBe(1);
 

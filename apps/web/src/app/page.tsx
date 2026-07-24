@@ -1,33 +1,81 @@
 import Link from "next/link";
 import {
-  ArrowRight, CalendarRange, CheckCircle2, CreditCard, ListTodo, Lock,
-  Receipt, ShieldCheck, Users, Wallet,
+  ArrowRight,
+  CalendarRange,
+  CheckCircle2,
+  CreditCard,
+  ListTodo,
+  Lock,
+  Receipt,
+  ShieldCheck,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { Button, Card, CardContent } from "@mep/ui";
 import { PublicFooter, PublicNav } from "@/components/public-nav";
 
 const FEATURES = [
-  { icon: Wallet, title: "Budget control", text: "Categories and line items with planned vs. actual, variance and utilisation — always current." },
-  { icon: Receipt, title: "Expenses & refunds", text: "Integer-exact amounts, partial payments, refunds, receipts and a full audit trail." },
-  { icon: Users, title: "Guests & RSVPs", text: "Groups, households, dietary needs, CSV import with duplicate detection." },
-  { icon: CalendarRange, title: "Tasks, timeline & calendar", text: "Dependencies, deadlines and one merged calendar — nothing falls through the cracks." },
+  {
+    icon: Wallet,
+    title: "Budget control",
+    text: "Categories and line items with planned vs. actual, variance and utilisation — always current.",
+  },
+  {
+    icon: Receipt,
+    title: "Expenses & refunds",
+    text: "Integer-exact amounts, partial payments, refunds, receipts and a full audit trail.",
+  },
+  {
+    icon: Users,
+    title: "Guests & RSVPs",
+    text: "Groups, households, dietary needs, CSV import with duplicate detection.",
+  },
+  {
+    icon: CalendarRange,
+    title: "Tasks, timeline & calendar",
+    text: "Dependencies, deadlines and one merged calendar — nothing falls through the cracks.",
+  },
 ];
 
 const STEPS = [
-  { n: 1, title: "Create your event", text: "Set the date, venue, budget and currency — invite your team." },
-  { n: 2, title: "Plan everything", text: "Budget items, vendors, guests, tasks and the timeline in one workspace." },
-  { n: 3, title: "Stay in control", text: "Payments, refunds and reports keep every cent accounted for until event day." },
+  {
+    n: 1,
+    title: "Create your event",
+    text: "Set the date, venue, budget and currency — invite your team.",
+  },
+  {
+    n: 2,
+    title: "Plan everything",
+    text: "Budget items, vendors, guests, tasks and the timeline in one workspace.",
+  },
+  {
+    n: 3,
+    title: "Stay in control",
+    text: "Payments, refunds and reports keep every cent accounted for until event day.",
+  },
 ];
 
 const USE_CASES = [
   { title: "Weddings", text: "Guests, seating, vendors and a budget that survives reality." },
-  { title: "Corporate events", text: "Conferences, offsites and kickoffs with team collaboration and reports." },
-  { title: "Private celebrations", text: "Birthdays, anniversaries and reunions without spreadsheet chaos." },
+  {
+    title: "Corporate events",
+    text: "Conferences, offsites and kickoffs with team collaboration and reports.",
+  },
+  {
+    title: "Private celebrations",
+    text: "Birthdays, anniversaries and reunions without spreadsheet chaos.",
+  },
 ];
 
 const FAQS: { q: string; a: string }[] = [
-  { q: "How does budget control work?", a: "Every expense is stored as exact integer cents and linked to a budget item. You always see planned vs. actual, variance and utilisation per category and item — computed server-side, never estimated." },
-  { q: "Can I record partial payments and refunds?", a: "Yes. Expenses move through unpaid → partially paid → paid automatically. Refunds are first-class records linked to their payment, and the history is never deleted." },
+  {
+    q: "How does budget control work?",
+    a: "Every expense is stored as exact integer cents and linked to a budget item. You always see planned vs. actual, variance and utilisation per category and item — computed server-side, never estimated.",
+  },
+  {
+    q: "Can I record partial payments and refunds?",
+    a: "Yes. Expenses move through unpaid → partially paid → paid automatically. Refunds are first-class records linked to their payment, and the history is never deleted.",
+  },
 ];
 
 export default function LandingPage() {
@@ -41,12 +89,18 @@ export default function LandingPage() {
           Plan events. <span className="text-primary">Control budgets.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          The event planning platform with financial discipline built in — every cent
-          tracked from first quote to final refund.
+          The event planning platform with financial discipline built in — every cent tracked from
+          first quote to final refund.
         </p>
         <div className="mt-8 flex justify-center gap-3">
-          <Button size="lg" asChild><Link href="/register">Get started <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
-          <Button size="lg" variant="outline" asChild><Link href="/features">Explore features</Link></Button>
+          <Button size="lg" asChild>
+            <Link href="/register">
+              Get started <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link href="/features">Explore features</Link>
+          </Button>
         </div>
       </section>
 
@@ -54,7 +108,11 @@ export default function LandingPage() {
       <section className="container pb-16">
         <div className="overflow-hidden rounded-xl border shadow-lg">
           {/* Real screenshot of the running product, not a mockup. */}
-          <img src="/preview.png" alt="My Event Planner budget view with planned, actual and variance per item" className="w-full" />
+          <img
+            src="/preview.png"
+            alt="My Event Planner budget view with planned, actual and variance per item"
+            className="w-full"
+          />
         </div>
         <p className="mt-3 text-center text-sm text-muted-foreground">
           The actual budget view — planned, actual, variance and utilisation per item.
@@ -84,8 +142,8 @@ export default function LandingPage() {
         <div>
           <h2 className="text-3xl font-bold">Financial discipline, not vibes</h2>
           <p className="mt-4 text-muted-foreground">
-            Most tools track tasks. We track money with the same rigor as an accounting
-            system — because event budgets die by a thousand small cuts.
+            Most tools track tasks. We track money with the same rigor as an accounting system —
+            because event budgets die by a thousand small cuts.
           </p>
           <ul className="mt-6 space-y-3">
             {[
@@ -106,7 +164,9 @@ export default function LandingPage() {
               <CreditCard className="h-6 w-6 text-primary" />
               <div>
                 <p className="text-sm font-medium">Catering — first instalment</p>
-                <p className="text-xs text-muted-foreground">€2.000,00 of €4.000,00 paid · partially paid</p>
+                <p className="text-xs text-muted-foreground">
+                  €2.000,00 of €4.000,00 paid · partially paid
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -159,7 +219,9 @@ export default function LandingPage() {
           ))}
         </div>
         <p className="mt-6 text-center text-sm">
-          <Link href="/use-cases" className="text-primary hover:underline">See all use cases →</Link>
+          <Link href="/use-cases" className="text-primary hover:underline">
+            See all use cases →
+          </Link>
         </p>
       </section>
 
@@ -169,9 +231,9 @@ export default function LandingPage() {
           <div>
             <h2 className="text-3xl font-bold">Your data, your event</h2>
             <p className="mt-4 text-muted-foreground">
-              Workspaces isolate every event. Roles decide who can view or change what.
-              Sessions are HTTP-only cookies, passwords are scrypt-hashed, and every
-              mutation lands in an audit log.
+              Workspaces isolate every event. Roles decide who can view or change what. Sessions are
+              HTTP-only cookies, passwords are scrypt-hashed, and every mutation lands in an audit
+              log.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -201,7 +263,9 @@ export default function LandingPage() {
           ))}
         </div>
         <p className="mt-6 text-center text-sm">
-          <Link href="/faq" className="text-primary hover:underline">More questions →</Link>
+          <Link href="/faq" className="text-primary hover:underline">
+            More questions →
+          </Link>
         </p>
       </section>
 

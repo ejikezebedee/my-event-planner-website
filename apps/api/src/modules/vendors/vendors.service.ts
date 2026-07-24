@@ -47,7 +47,12 @@ export class VendorsService {
     workspaceId: bigint,
     filter: { q?: string; category?: string; includeArchived?: boolean } = {},
   ) {
-    await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin", "planner", "viewer"]);
+    await this.access.assertWorkspaceRole(userId, workspaceId, [
+      "owner",
+      "admin",
+      "planner",
+      "viewer",
+    ]);
     return this.prisma.vendor.findMany({
       where: {
         workspaceId,
@@ -73,7 +78,12 @@ export class VendorsService {
    * quoted/agreed totals and the refund-aware net amount actually paid.
    */
   async getVendorSummary(userId: bigint, workspaceId: bigint, vendorId: bigint) {
-    await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin", "planner", "viewer"]);
+    await this.access.assertWorkspaceRole(userId, workspaceId, [
+      "owner",
+      "admin",
+      "planner",
+      "viewer",
+    ]);
     const vendor = await this.prisma.vendor.findFirst({ where: { id: vendorId, workspaceId } });
     if (!vendor) throw new NotFoundException("Vendor not found");
     const [links, payments] = await Promise.all([
@@ -87,10 +97,7 @@ export class VendorsService {
         select: { amount: true, type: true },
       }),
     ]);
-    const paid = payments.reduce(
-      (s, p) => (p.type === "refund" ? s - p.amount : s + p.amount),
-      0n,
-    );
+    const paid = payments.reduce((s, p) => (p.type === "refund" ? s - p.amount : s + p.amount), 0n);
     return {
       ...vendor,
       links,
@@ -108,21 +115,39 @@ export class VendorsService {
     const vendor = await this.prisma.vendor.create({
       data: { ...input, workspaceId, createdById: userId },
     });
-    await this.audit.log({ actorId: userId, workspaceId, action: "vendor.create", resourceType: "vendor", resourceId: vendor.id });
+    await this.audit.log({
+      actorId: userId,
+      workspaceId,
+      action: "vendor.create",
+      resourceType: "vendor",
+      resourceId: vendor.id,
+    });
     return vendor;
   }
 
   async updateVendor(userId: bigint, workspaceId: bigint, vendorId: bigint, input: VendorInput) {
     await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin", "planner"]);
-    const updated = await this.prisma.vendor.updateMany({ where: { id: vendorId, workspaceId }, data: input });
+    const updated = await this.prisma.vendor.updateMany({
+      where: { id: vendorId, workspaceId },
+      data: input,
+    });
     if (updated.count === 0) throw new NotFoundException("Vendor not found");
     return { ok: true };
   }
 
   async archiveVendor(userId: bigint, workspaceId: bigint, vendorId: bigint) {
     await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin", "planner"]);
-    await this.prisma.vendor.updateMany({ where: { id: vendorId, workspaceId }, data: { archived: true } });
-    await this.audit.log({ actorId: userId, workspaceId, action: "vendor.archive", resourceType: "vendor", resourceId: vendorId });
+    await this.prisma.vendor.updateMany({
+      where: { id: vendorId, workspaceId },
+      data: { archived: true },
+    });
+    await this.audit.log({
+      actorId: userId,
+      workspaceId,
+      action: "vendor.archive",
+      resourceType: "vendor",
+      resourceId: vendorId,
+    });
     return { ok: true };
   }
 
@@ -152,7 +177,12 @@ export class VendorsService {
     }));
   }
 
-  async upsertEventVendor(userId: bigint, eventId: bigint, input: EventVendorInput, linkId?: bigint) {
+  async upsertEventVendor(
+    userId: bigint,
+    eventId: bigint,
+    input: EventVendorInput,
+    linkId?: bigint,
+  ) {
     const event = await this.access.assertEventWrite(userId, eventId);
     const data = {
       eventId,

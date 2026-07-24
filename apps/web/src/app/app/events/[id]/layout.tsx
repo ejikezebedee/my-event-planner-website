@@ -48,7 +48,9 @@ export default function EventLayout({ children }: { children: React.ReactNode })
   return (
     <div>
       <div className="mb-4">
-        <Link href="/app/events" className="text-sm text-muted-foreground hover:underline">← All events</Link>
+        <Link href="/app/events" className="text-sm text-muted-foreground hover:underline">
+          ← All events
+        </Link>
         {event.data ? (
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{event.data.name}</h1>
         ) : (

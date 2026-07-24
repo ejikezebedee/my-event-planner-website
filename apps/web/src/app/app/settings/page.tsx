@@ -6,10 +6,31 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import {
-  Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input,
-  Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent,
-  TabsList, TabsTrigger,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@mep/ui";
 import { CURRENCIES } from "@mep/types";
 import { api, ApiError } from "@/lib/api";
@@ -31,7 +52,8 @@ interface Member {
   user: { id: number; name: string; email: string };
 }
 
-const onError = (err: unknown) => toast.error(err instanceof ApiError ? err.message : "Action failed");
+const onError = (err: unknown) =>
+  toast.error(err instanceof ApiError ? err.message : "Action failed");
 
 function ProfileSection() {
   const me = useMe();
@@ -56,11 +78,22 @@ function ProfileSection() {
       <CardHeader>
         <CardTitle className="text-base">Profile</CardTitle>
         <CardDescription>
-          {me.data.email} {me.data.emailVerifiedAt ? <Badge variant="secondary">verified</Badge> : <Badge variant="destructive">unverified</Badge>}
+          {me.data.email}{" "}
+          {me.data.emailVerifiedAt ? (
+            <Badge variant="secondary">verified</Badge>
+          ) : (
+            <Badge variant="destructive">unverified</Badge>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="grid max-w-md gap-4" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
+        <form
+          className="grid max-w-md gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+        >
           <div className="space-y-1.5">
             <Label>Name</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -68,15 +101,28 @@ function ProfileSection() {
           <div className="space-y-1.5">
             <Label>Default currency</Label>
             <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Timezone</Label>
-            <Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} />
+            <Input
+              value={form.timezone}
+              onChange={(e) => setForm({ ...form, timezone: e.target.value })}
+            />
           </div>
-          <Button type="submit" className="w-fit" disabled={save.isPending}>Save profile</Button>
+          <Button type="submit" className="w-fit" disabled={save.isPending}>
+            Save profile
+          </Button>
         </form>
       </CardContent>
     </Card>
@@ -90,7 +136,9 @@ function ChangeEmailSection() {
   const changeEmail = useMutation({
     mutationFn: () => api.post("/auth/change-email", form),
     onSuccess: () => {
-      toast.success("Confirmation link sent to the new address — your email changes once confirmed");
+      toast.success(
+        "Confirmation link sent to the new address — your email changes once confirmed",
+      );
       setForm({ newEmail: "", password: "" });
       queryClient.invalidateQueries({ queryKey: ["me"] });
     },
@@ -101,34 +149,56 @@ function ChangeEmailSection() {
       <CardHeader>
         <CardTitle className="text-base">Change email address</CardTitle>
         <CardDescription>
-          Current: {me.data?.email}. The new address must be confirmed via a link we send to it;
-          all sessions are then signed out.
+          Current: {me.data?.email}. The new address must be confirmed via a link we send to it; all
+          sessions are then signed out.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="grid max-w-md gap-4" onSubmit={(e) => { e.preventDefault(); changeEmail.mutate(); }}>
+        <form
+          className="grid max-w-md gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            changeEmail.mutate();
+          }}
+        >
           <div className="space-y-1.5">
             <Label>New email address</Label>
-            <Input type="email" required autoComplete="email" value={form.newEmail} onChange={(e) => setForm({ ...form, newEmail: e.target.value })} />
+            <Input
+              type="email"
+              required
+              autoComplete="email"
+              value={form.newEmail}
+              onChange={(e) => setForm({ ...form, newEmail: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Confirm with password</Label>
-            <Input type="password" required autoComplete="current-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <Input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
           </div>
-          <Button type="submit" className="w-fit" disabled={changeEmail.isPending}>Send confirmation link</Button>
+          <Button type="submit" className="w-fit" disabled={changeEmail.isPending}>
+            Send confirmation link
+          </Button>
         </form>
       </CardContent>
     </Card>
   );
 }
 
-
 function DataExportSection() {
   const [downloading, setDownloading] = useState(false);
   const download = async () => {
     setDownloading(true);
     try {
-      await api.download("/auth/account-export", `my-event-planner-data-${new Date().toISOString().slice(0, 10)}.json`);
+      await api.download(
+        "/auth/account-export",
+        `my-event-planner-data-${new Date().toISOString().slice(0, 10)}.json`,
+      );
       toast.success("Your account data export has been downloaded");
     } catch (err) {
       onError(err);
@@ -140,11 +210,15 @@ function DataExportSection() {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Export account data</CardTitle>
-        <CardDescription>Download a structured JSON copy of your profile, memberships, events, financial records, guests, vendors, tasks, notifications, document metadata and relevant audit history.</CardDescription>
+        <CardDescription>
+          Download a structured JSON copy of your profile, memberships, events, financial records,
+          guests, vendors, tasks, notifications, document metadata and relevant audit history.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Button type="button" variant="outline" onClick={download} disabled={downloading}>
-          <Download className="mr-2 h-4 w-4" />{downloading ? "Preparing…" : "Download my data"}
+          <Download className="mr-2 h-4 w-4" />
+          {downloading ? "Preparing…" : "Download my data"}
         </Button>
       </CardContent>
     </Card>
@@ -173,16 +247,38 @@ function DeleteAccountSection() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="grid max-w-md gap-4" onSubmit={(e) => { e.preventDefault(); deleteAccount.mutate(); }}>
+        <form
+          className="grid max-w-md gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            deleteAccount.mutate();
+          }}
+        >
           <div className="space-y-1.5">
             <Label>Password</Label>
-            <Input type="password" required autoComplete="current-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <Input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Type DELETE to confirm</Label>
-            <Input required pattern="DELETE" value={form.confirmation} onChange={(e) => setForm({ ...form, confirmation: e.target.value })} />
+            <Input
+              required
+              pattern="DELETE"
+              value={form.confirmation}
+              onChange={(e) => setForm({ ...form, confirmation: e.target.value })}
+            />
           </div>
-          <Button type="submit" variant="destructive" className="w-fit" disabled={deleteAccount.isPending || form.confirmation !== "DELETE"}>
+          <Button
+            type="submit"
+            variant="destructive"
+            className="w-fit"
+            disabled={deleteAccount.isPending || form.confirmation !== "DELETE"}
+          >
             Delete my account
           </Button>
         </form>
@@ -216,40 +312,85 @@ function SecuritySection() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader><CardTitle className="text-base">Change password</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Change password</CardTitle>
+        </CardHeader>
         <CardContent>
-          <form className="grid max-w-md gap-4" onSubmit={(e) => { e.preventDefault(); changePassword.mutate(); }}>
+          <form
+            className="grid max-w-md gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              changePassword.mutate();
+            }}
+          >
             <div className="space-y-1.5">
               <Label>Current password</Label>
-              <Input type="password" required autoComplete="current-password" value={form.currentPassword} onChange={(e) => setForm({ ...form, currentPassword: e.target.value })} />
+              <Input
+                type="password"
+                required
+                autoComplete="current-password"
+                value={form.currentPassword}
+                onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>New password</Label>
-              <Input type="password" required minLength={8} autoComplete="new-password" value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} />
+              <Input
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={form.newPassword}
+                onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+              />
             </div>
-            <Button type="submit" className="w-fit" disabled={changePassword.isPending}>Change password</Button>
+            <Button type="submit" className="w-fit" disabled={changePassword.isPending}>
+              Change password
+            </Button>
           </form>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="text-base">Active sessions</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Active sessions</CardTitle>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Device</TableHead><TableHead>IP</TableHead><TableHead>Created</TableHead><TableHead className="w-12" /></TableRow>
+              <TableRow>
+                <TableHead>Device</TableHead>
+                <TableHead>IP</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
             </TableHeader>
             <TableBody>
               {sessions.data?.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>
-                    <span className="block max-w-xs truncate">{s.userAgent ?? "Unknown device"}</span>
-                    {s.current && <Badge variant="secondary" className="mt-1">This session</Badge>}
+                    <span className="block max-w-xs truncate">
+                      {s.userAgent ?? "Unknown device"}
+                    </span>
+                    {s.current && (
+                      <Badge variant="secondary" className="mt-1">
+                        This session
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{s.ip ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatDateTime(s.createdAt)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDateTime(s.createdAt)}
+                  </TableCell>
                   <TableCell>
                     {!s.current && (
-                      <Button size="icon" variant="ghost" aria-label="Revoke session" onClick={() => revoke.mutate(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Revoke session"
+                        onClick={() => revoke.mutate(s.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -260,12 +401,18 @@ function SecuritySection() {
       </Card>
       <ChangeEmailSection />
       <DataExportSection />
-          <DeleteAccountSection />
+      <DeleteAccountSection />
     </div>
   );
 }
 
-function TransferOwnershipSection({ current, members }: { current: { id: number }; members: Member[] | undefined }) {
+function TransferOwnershipSection({
+  current,
+  members,
+}: {
+  current: { id: number };
+  members: Member[] | undefined;
+}) {
   const me = useMe();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ memberId: "", password: "" });
@@ -289,27 +436,46 @@ function TransferOwnershipSection({ current, members }: { current: { id: number 
       <CardHeader>
         <CardTitle className="text-base">Transfer ownership</CardTitle>
         <CardDescription>
-          Hand this workspace to another member. You stay on as an admin. Confirmed with your password.
+          Hand this workspace to another member. You stay on as an admin. Confirmed with your
+          password.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="flex max-w-lg items-end gap-2" onSubmit={(e) => { e.preventDefault(); transfer.mutate(); }}>
+        <form
+          className="flex max-w-lg items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            transfer.mutate();
+          }}
+        >
           <div className="flex-1 space-y-1.5">
             <Label>New owner</Label>
             <Select value={form.memberId} onValueChange={(v) => setForm({ ...form, memberId: v })}>
-              <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Select member" />
+              </SelectTrigger>
               <SelectContent>
                 {candidates.map((m) => (
-                  <SelectItem key={m.id} value={String(m.id)}>{m.user.name} ({m.user.email})</SelectItem>
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.user.name} ({m.user.email})
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Your password</Label>
-            <Input type="password" required autoComplete="current-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <Input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
           </div>
-          <Button type="submit" variant="secondary" disabled={transfer.isPending || !form.memberId}>Transfer</Button>
+          <Button type="submit" variant="secondary" disabled={transfer.isPending || !form.memberId}>
+            Transfer
+          </Button>
         </form>
       </CardContent>
     </Card>
@@ -356,15 +522,28 @@ function WorkspaceSection() {
           <CardDescription>Invite people and manage workspace roles.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex max-w-lg items-end gap-2" onSubmit={(e) => { e.preventDefault(); sendInvite.mutate(); }}>
+          <form
+            className="flex max-w-lg items-end gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendInvite.mutate();
+            }}
+          >
             <div className="flex-1 space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" required value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} />
+              <Input
+                type="email"
+                required
+                value={invite.email}
+                onChange={(e) => setInvite({ ...invite, email: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Role</Label>
               <Select value={invite.role} onValueChange={(v) => setInvite({ ...invite, role: v })}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="planner">Planner</SelectItem>
@@ -372,16 +551,25 @@ function WorkspaceSection() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" disabled={sendInvite.isPending}>Invite</Button>
+            <Button type="submit" disabled={sendInvite.isPending}>
+              Invite
+            </Button>
           </form>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="text-base">Members</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Members</CardTitle>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead className="w-12" /></TableRow>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
             </TableHeader>
             <TableBody>
               {members.data?.map((m) => (
@@ -392,8 +580,13 @@ function WorkspaceSection() {
                     {m.role === "owner" ? (
                       <Badge>Owner</Badge>
                     ) : (
-                      <Select value={m.role} onValueChange={(v) => setRole.mutate({ memberId: m.id, role: v })}>
-                        <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                      <Select
+                        value={m.role}
+                        onValueChange={(v) => setRole.mutate({ memberId: m.id, role: v })}
+                      >
+                        <SelectTrigger className="h-8 w-32">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="admin">Admin</SelectItem>
                           <SelectItem value="planner">Planner</SelectItem>
@@ -404,7 +597,14 @@ function WorkspaceSection() {
                   </TableCell>
                   <TableCell>
                     {m.role !== "owner" && (
-                      <Button size="icon" variant="ghost" aria-label={`Remove ${m.user.name} from workspace`} onClick={() => { if (confirm(`Remove ${m.user.name}?`)) removeMember.mutate(m.id); }}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={`Remove ${m.user.name} from workspace`}
+                        onClick={() => {
+                          if (confirm(`Remove ${m.user.name}?`)) removeMember.mutate(m.id);
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
@@ -432,9 +632,15 @@ export default function SettingsPage() {
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="workspace">Workspace</TabsTrigger>
         </TabsList>
-        <TabsContent value="profile" className="mt-6"><ProfileSection /></TabsContent>
-        <TabsContent value="security" className="mt-6"><SecuritySection /></TabsContent>
-        <TabsContent value="workspace" className="mt-6"><WorkspaceSection /></TabsContent>
+        <TabsContent value="profile" className="mt-6">
+          <ProfileSection />
+        </TabsContent>
+        <TabsContent value="security" className="mt-6">
+          <SecuritySection />
+        </TabsContent>
+        <TabsContent value="workspace" className="mt-6">
+          <WorkspaceSection />
+        </TabsContent>
       </Tabs>
     </div>
   );

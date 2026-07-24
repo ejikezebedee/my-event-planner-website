@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@mep/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@mep/ui";
 import { api } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
@@ -32,7 +41,8 @@ export default function ForgotPasswordPage() {
           {sent ? (
             <div className="space-y-4">
               <p className="text-sm">
-                If an account exists for <strong>{email}</strong>, a reset link has been sent. Please check your inbox.
+                If an account exists for <strong>{email}</strong>, a reset link has been sent.
+                Please check your inbox.
               </p>
               <Button variant="outline" className="w-full" asChild>
                 <Link href="/login">Back to login</Link>
@@ -42,7 +52,13 @@ export default function ForgotPasswordPage() {
             <form onSubmit={submit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "Sending…" : "Send reset link"}

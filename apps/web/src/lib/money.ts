@@ -12,5 +12,7 @@ export function formatDate(iso: string | null | undefined): string {
 
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
-  return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+  return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(iso),
+  );
 }

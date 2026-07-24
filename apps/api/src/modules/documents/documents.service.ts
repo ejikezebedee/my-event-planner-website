@@ -92,7 +92,12 @@ export class DocumentsService {
     private readonly scanner: ScannerService,
   ) {}
 
-  private validateFile(file: { originalname: string; size: number; mimetype: string; buffer: Buffer }) {
+  private validateFile(file: {
+    originalname: string;
+    size: number;
+    mimetype: string;
+    buffer: Buffer;
+  }) {
     const maxBytes = env.MAX_UPLOAD_MB * 1024 * 1024;
     if (file.size > maxBytes) {
       throw new PayloadTooLargeException(`File exceeds the ${env.MAX_UPLOAD_MB} MB limit`);
@@ -109,7 +114,11 @@ export class DocumentsService {
     }
   }
 
-  async list(userId: bigint, eventId: bigint, filter: { expenseId?: number; paymentId?: number } = {}) {
+  async list(
+    userId: bigint,
+    eventId: bigint,
+    filter: { expenseId?: number; paymentId?: number } = {},
+  ) {
     await this.access.assertEventAccess(userId, eventId);
     return this.prisma.document.findMany({
       where: {
@@ -242,7 +251,10 @@ export class DocumentsService {
     }
 
     if (this.storage.driver === "s3") {
-      const url = await this.storage.getSignedDownloadUrl(document.storageKey, document.originalName);
+      const url = await this.storage.getSignedDownloadUrl(
+        document.storageKey,
+        document.originalName,
+      );
       if (url) return { kind: "redirect" as const, url, document };
     }
     const buffer = await this.storage.getBuffer(document.storageKey);

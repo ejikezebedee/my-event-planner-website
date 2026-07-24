@@ -8,12 +8,29 @@ describe("buildCalendarItems", () => {
         { id: 1, title: "Rehearsal dinner", type: "rehearsal", startAt: "2026-08-14T18:00:00Z" },
       ],
       tasks: [
-        { id: 5, title: "Confirm headcount", status: "in_progress", priority: "high", dueAt: "2026-08-01T00:00:00Z" },
+        {
+          id: 5,
+          title: "Confirm headcount",
+          status: "in_progress",
+          priority: "high",
+          dueAt: "2026-08-01T00:00:00Z",
+        },
       ],
       expenses: [
-        { id: 9, title: "Catering balance", status: "partially_paid", dueDate: "2026-08-10T00:00:00Z", totalAmount: 40000 },
+        {
+          id: 9,
+          title: "Catering balance",
+          status: "partially_paid",
+          dueDate: "2026-08-10T00:00:00Z",
+          totalAmount: 40000,
+        },
       ],
-      event: { id: 1, name: "Wedding", startAt: "2026-08-15T10:00:00Z", endAt: "2026-08-15T23:00:00Z" },
+      event: {
+        id: 1,
+        name: "Wedding",
+        startAt: "2026-08-15T10:00:00Z",
+        endAt: "2026-08-15T23:00:00Z",
+      },
     });
     expect(items.map((i) => i.key)).toEqual([
       "task:5",
@@ -27,11 +44,27 @@ describe("buildCalendarItems", () => {
 
   it("never duplicates: rebuilt from updated records, keys stay stable", () => {
     const before = buildCalendarItems({
-      tasks: [{ id: 5, title: "Confirm headcount", status: "in_progress", priority: "high", dueAt: "2026-08-01T00:00:00Z" }],
+      tasks: [
+        {
+          id: 5,
+          title: "Confirm headcount",
+          status: "in_progress",
+          priority: "high",
+          dueAt: "2026-08-01T00:00:00Z",
+        },
+      ],
     });
     // Same task after an edit (new title, same id) → same key, still one item.
     const after = buildCalendarItems({
-      tasks: [{ id: 5, title: "Confirm FINAL headcount", status: "blocked", priority: "critical", dueAt: "2026-08-02T00:00:00Z" }],
+      tasks: [
+        {
+          id: 5,
+          title: "Confirm FINAL headcount",
+          status: "blocked",
+          priority: "critical",
+          dueAt: "2026-08-02T00:00:00Z",
+        },
+      ],
     });
     expect(before).toHaveLength(1);
     expect(after).toHaveLength(1);
@@ -41,13 +74,37 @@ describe("buildCalendarItems", () => {
   it("hides completed tasks and settled expenses", () => {
     const items = buildCalendarItems({
       tasks: [
-        { id: 1, title: "Done", status: "completed", priority: "low", dueAt: "2026-08-01T00:00:00Z" },
-        { id: 2, title: "Cancelled", status: "cancelled", priority: "low", dueAt: "2026-08-01T00:00:00Z" },
+        {
+          id: 1,
+          title: "Done",
+          status: "completed",
+          priority: "low",
+          dueAt: "2026-08-01T00:00:00Z",
+        },
+        {
+          id: 2,
+          title: "Cancelled",
+          status: "cancelled",
+          priority: "low",
+          dueAt: "2026-08-01T00:00:00Z",
+        },
       ],
       expenses: [
         { id: 1, title: "Paid", status: "paid", dueDate: "2026-08-01T00:00:00Z", totalAmount: 100 },
-        { id: 2, title: "Refunded", status: "refunded", dueDate: "2026-08-01T00:00:00Z", totalAmount: 100 },
-        { id: 3, title: "Open", status: "unpaid", dueDate: "2026-08-01T00:00:00Z", totalAmount: 100 },
+        {
+          id: 2,
+          title: "Refunded",
+          status: "refunded",
+          dueDate: "2026-08-01T00:00:00Z",
+          totalAmount: 100,
+        },
+        {
+          id: 3,
+          title: "Open",
+          status: "unpaid",
+          dueDate: "2026-08-01T00:00:00Z",
+          totalAmount: 100,
+        },
       ],
     });
     expect(items.map((i) => i.key)).toEqual(["expense:3:due"]);
@@ -56,16 +113,38 @@ describe("buildCalendarItems", () => {
   it("includes vendor service and payment dates, skips cancelled vendors", () => {
     const items = buildCalendarItems({
       eventVendors: [
-        { id: 1, serviceDate: "2026-08-15T09:00:00Z", paymentDueDate: "2026-08-01T00:00:00Z", status: "contracted", vendor: { businessName: "Lakeside" } },
-        { id: 2, serviceDate: "2026-08-15T09:00:00Z", status: "cancelled", vendor: { businessName: "Band" } },
+        {
+          id: 1,
+          serviceDate: "2026-08-15T09:00:00Z",
+          paymentDueDate: "2026-08-01T00:00:00Z",
+          status: "contracted",
+          vendor: { businessName: "Lakeside" },
+        },
+        {
+          id: 2,
+          serviceDate: "2026-08-15T09:00:00Z",
+          status: "cancelled",
+          vendor: { businessName: "Band" },
+        },
       ],
     });
-    expect(items.map((i) => i.key).sort()).toEqual(["eventVendor:1:payment", "eventVendor:1:service"]);
+    expect(items.map((i) => i.key).sort()).toEqual([
+      "eventVendor:1:payment",
+      "eventVendor:1:service",
+    ]);
   });
 
   it("falls back to startAt for tasks without a due date", () => {
     const items = buildCalendarItems({
-      tasks: [{ id: 7, title: "Setup", status: "not_started", priority: "medium", startAt: "2026-08-15T06:00:00Z" }],
+      tasks: [
+        {
+          id: 7,
+          title: "Setup",
+          status: "not_started",
+          priority: "medium",
+          startAt: "2026-08-15T06:00:00Z",
+        },
+      ],
     });
     expect(items[0]!.startAt).toBe("2026-08-15T06:00:00Z");
     expect(items[0]!.meta?.due).toBe(false);

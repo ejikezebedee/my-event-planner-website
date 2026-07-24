@@ -121,7 +121,9 @@ describe("Reports & Notifications (e2e)", () => {
   });
 
   it("round-trips the email preference", async () => {
-    const on = await agent.put("/api/v1/notifications/preferences").send({ types: {}, email: true });
+    const on = await agent
+      .put("/api/v1/notifications/preferences")
+      .send({ types: {}, email: true });
     expect(on.body.email).toBe(true);
     const read = await agent.get("/api/v1/notifications/preferences");
     expect(read.body.email).toBe(true);
@@ -152,8 +154,8 @@ describe("Reports & Notifications (e2e)", () => {
 
   it("serves valid PDF reports with footer pagination", async () => {
     const events = await agent.get("/api/v1/events?workspaceId=1");
-    const eventId = events.body.find((e: { name: string }) => e.name.includes("Anna"))?.id
-      ?? events.body[0].id;
+    const eventId =
+      events.body.find((e: { name: string }) => e.name.includes("Anna"))?.id ?? events.body[0].id;
     const res = await agent
       .get(`/api/v1/events/${eventId}/reports/budget_summary?format=pdf`)
       .buffer(true)

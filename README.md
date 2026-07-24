@@ -4,17 +4,17 @@ Production-grade event planning and budget control platform. Plan weddings, part
 
 ## Stack
 
-| Layer | Technology |
-|---|---|
-| Monorepo | pnpm 9 workspaces + Turborepo |
-| Web | Next.js 15 (App Router) · React 19 · Tailwind · TanStack Query |
-| API | NestJS 10 (REST, `/api/v1`) · Swagger at `/docs` |
-| Database | PostgreSQL 16 via Prisma 6 |
-| Cache/queues | Redis 7 + BullMQ (optional — graceful degradation) |
-| Storage | S3-compatible (MinIO / AWS S3 / Cloudflare R2) or local disk |
-| Mail | resend / SMTP / console (dev) |
-| Tests | Vitest (unit + supertest e2e) · Testing Library · Playwright |
-| PWA | Web app manifest, service worker, offline fallback page |
+| Layer        | Technology                                                     |
+| ------------ | -------------------------------------------------------------- |
+| Monorepo     | pnpm 9 workspaces + Turborepo                                  |
+| Web          | Next.js 15 (App Router) · React 19 · Tailwind · TanStack Query |
+| API          | NestJS 10 (REST, `/api/v1`) · Swagger at `/docs`               |
+| Database     | PostgreSQL 16 via Prisma 6                                     |
+| Cache/queues | Redis 7 + BullMQ (optional — graceful degradation)             |
+| Storage      | S3-compatible (MinIO / AWS S3 / Cloudflare R2) or local disk   |
+| Mail         | resend / SMTP / console (dev)                                  |
+| Tests        | Vitest (unit + supertest e2e) · Testing Library · Playwright   |
+| PWA          | Web app manifest, service worker, offline fallback page        |
 
 ```
 apps/

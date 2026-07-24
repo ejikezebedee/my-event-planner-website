@@ -69,18 +69,23 @@ export function assertProductionConfig(): void {
   const isLocal = (v: string) => /localhost|127\.0\.0\.1|\[::1\]/.test(v);
 
   const allWebOrigins = env.WEB_ORIGIN.split(",").map((value) => value.trim());
-  if (allWebOrigins.some(isLocal)) problems.push("WEB_ORIGIN must use public origins, not localhost");
-  if (allWebOrigins.some((value) => !value.startsWith("https://"))) problems.push("WEB_ORIGIN must use HTTPS in production");
+  if (allWebOrigins.some(isLocal))
+    problems.push("WEB_ORIGIN must use public origins, not localhost");
+  if (allWebOrigins.some((value) => !value.startsWith("https://")))
+    problems.push("WEB_ORIGIN must use HTTPS in production");
   if (isLocal(env.APP_BASE_URL)) problems.push("APP_BASE_URL must be a public URL, not localhost");
-  if (!env.APP_BASE_URL.startsWith("https://")) problems.push("APP_BASE_URL must use HTTPS in production");
+  if (!env.APP_BASE_URL.startsWith("https://"))
+    problems.push("APP_BASE_URL must use HTTPS in production");
   if (!env.REDIS_URL) problems.push("REDIS_URL is required in production");
   if (!env.MALWARE_SCAN_URL) problems.push("MALWARE_SCAN_URL is required in production");
   if (!env.TRUST_PROXY) problems.push("TRUST_PROXY must be configured in production");
   if (!env.SESSION_COOKIE_SECURE) {
     problems.push("SESSION_COOKIE_SECURE must be true in production (sessions over HTTPS only)");
   }
-  if (/example\.com$/i.test(env.CONTACT_EMAIL)) problems.push("CONTACT_EMAIL must not use an example address");
-  if (/example\.com/i.test(env.EMAIL_FROM)) problems.push("EMAIL_FROM must not use an example address");
+  if (/example\.com$/i.test(env.CONTACT_EMAIL))
+    problems.push("CONTACT_EMAIL must not use an example address");
+  if (/example\.com/i.test(env.EMAIL_FROM))
+    problems.push("EMAIL_FROM must not use an example address");
   if (env.EMAIL_PROVIDER === "console") {
     problems.push("EMAIL_PROVIDER=console discards real email — configure smtp or resend");
   }
@@ -90,8 +95,13 @@ export function assertProductionConfig(): void {
   if (env.EMAIL_PROVIDER === "resend" && !env.RESEND_API_KEY) {
     problems.push("RESEND_API_KEY is required when EMAIL_PROVIDER=resend");
   }
-  if (env.STORAGE_DRIVER === "s3" && (!env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY)) {
-    problems.push("S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required when STORAGE_DRIVER=s3");
+  if (
+    env.STORAGE_DRIVER === "s3" &&
+    (!env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY)
+  ) {
+    problems.push(
+      "S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required when STORAGE_DRIVER=s3",
+    );
   }
   if (!env.REQUIRE_EMAIL_VERIFICATION) {
     problems.push("REQUIRE_EMAIL_VERIFICATION must not be disabled in production");

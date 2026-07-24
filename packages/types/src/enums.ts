@@ -82,21 +82,10 @@ export const INVITATION_STATUSES = [
 ] as const;
 export type InvitationStatus = (typeof INVITATION_STATUSES)[number];
 
-export const RSVP_STATUSES = [
-  "pending",
-  "accepted",
-  "declined",
-  "maybe",
-  "no_response",
-] as const;
+export const RSVP_STATUSES = ["pending", "accepted", "declined", "maybe", "no_response"] as const;
 export type RsvpStatus = (typeof RSVP_STATUSES)[number];
 
-export const ATTENDANCE_STATUSES = [
-  "expected",
-  "checked_in",
-  "absent",
-  "cancelled",
-] as const;
+export const ATTENDANCE_STATUSES = ["expected", "checked_in", "absent", "cancelled"] as const;
 export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
 
 export const TASK_STATUSES = [
@@ -142,14 +131,7 @@ export const TIMELINE_TYPES = [
 ] as const;
 export type TimelineType = (typeof TIMELINE_TYPES)[number];
 
-export const REPORT_TYPES = [
-  "budget",
-  "expense",
-  "payment",
-  "vendor",
-  "guest",
-  "task",
-] as const;
+export const REPORT_TYPES = ["budget", "expense", "payment", "vendor", "guest", "task"] as const;
 export type ReportType = (typeof REPORT_TYPES)[number];
 
 export const DEFAULT_BUDGET_CATEGORIES = [

@@ -14,15 +14,32 @@ export class DashboardController {
   ) {}
 
   @Get()
-  async get(@CurrentUser() user: AuthUser, @Query("workspaceId", ParseIntPipe) workspaceId: number) {
+  async get(
+    @CurrentUser() user: AuthUser,
+    @Query("workspaceId", ParseIntPipe) workspaceId: number,
+  ) {
     const wsId = BigInt(workspaceId);
-    const role = await this.access.assertWorkspaceRole(user.id, wsId, ["owner", "admin", "planner", "viewer"]);
+    const role = await this.access.assertWorkspaceRole(user.id, wsId, [
+      "owner",
+      "admin",
+      "planner",
+      "viewer",
+    ]);
     const eventWhere: Prisma.EventWhereInput =
-      role === "owner" || role === "admin" ? { workspaceId: wsId } : { workspaceId: wsId, members: { some: { userId: user.id } } };
+      role === "owner" || role === "admin"
+        ? { workspaceId: wsId }
+        : { workspaceId: wsId, members: { some: { userId: user.id } } };
 
     const events = await this.prisma.event.findMany({
       where: { ...eventWhere, status: { not: "archived" } },
-      select: { id: true, name: true, startAt: true, status: true, budgetAmount: true, currency: true },
+      select: {
+        id: true,
+        name: true,
+        startAt: true,
+        status: true,
+        budgetAmount: true,
+        currency: true,
+      },
       orderBy: { startAt: "asc" },
     });
     const eventIds = events.map((e) => e.id);
@@ -42,7 +59,11 @@ export class DashboardController {
           where: { eventId: { in: eventIds }, status: { notIn: ["completed", "cancelled"] } },
         }),
         this.prisma.expense.count({
-          where: { eventId: { in: eventIds }, dueDate: { lt: new Date() }, status: { in: ["unpaid", "partially_paid"] } },
+          where: {
+            eventId: { in: eventIds },
+            dueDate: { lt: new Date() },
+            status: { in: ["unpaid", "partially_paid"] },
+          },
         }),
         this.prisma.task.findMany({
           where: {

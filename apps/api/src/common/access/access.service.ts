@@ -58,7 +58,9 @@ export class AccessService {
     });
     // Deliberately 404 for non-members: don't reveal the event exists.
     if (!membership) throw new NotFoundException("Event not found");
-    throw new ForbiddenException("Only the event owner or a workspace admin can perform this action");
+    throw new ForbiddenException(
+      "Only the event owner or a workspace admin can perform this action",
+    );
   }
 
   private async assertEvent(userId: bigint, eventId: bigint, write: boolean): Promise<Event> {

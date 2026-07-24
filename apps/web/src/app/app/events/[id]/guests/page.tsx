@@ -6,9 +6,27 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Button, Card, CardContent, Dialog, DialogContent, DialogHeader, DialogTitle, Input,
-  Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@mep/ui";
 import { RSVP_STATUSES, labelize } from "@mep/types";
 import { api, ApiError } from "@/lib/api";
@@ -19,7 +37,13 @@ import { PageHeader } from "@/components/page-header";
 interface GuestListResponse {
   guests: Guest[];
   groups: GuestGroup[];
-  stats: { total: number; accepted: number; declined: number; pending: number; totalAttending: number };
+  stats: {
+    total: number;
+    accepted: number;
+    declined: number;
+    pending: number;
+    totalAttending: number;
+  };
 }
 
 interface ImportResult {
@@ -46,13 +70,20 @@ export default function GuestsPage() {
   });
 
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", groupId: "", accompanyingCount: "0" });
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    groupId: "",
+    accompanyingCount: "0",
+  });
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<{ csv: string; result: ImportResult } | null>(null);
   const [importing, setImporting] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["guests", eventId] });
-  const onError = (err: unknown) => toast.error(err instanceof ApiError ? err.message : "Action failed");
+  const onError = (err: unknown) =>
+    toast.error(err instanceof ApiError ? err.message : "Action failed");
 
   const create = useMutation({
     mutationFn: () =>
@@ -96,7 +127,10 @@ export default function GuestsPage() {
   const previewCsv = async (file: File) => {
     const csv = await file.text();
     try {
-      const result = await api.post<ImportResult>(`/events/${eventId}/guests/import`, { csv, dryRun: true });
+      const result = await api.post<ImportResult>(`/events/${eventId}/guests/import`, {
+        csv,
+        dryRun: true,
+      });
       setPreview({ csv, result });
     } catch (err) {
       onError(err);
@@ -107,10 +141,16 @@ export default function GuestsPage() {
     if (!preview) return;
     setImporting(true);
     try {
-      const result = await api.post<ImportResult>(`/events/${eventId}/guests/import`, { csv: preview.csv });
-      toast.success(`Imported ${result.imported} guest(s), ${result.duplicates} duplicate(s) skipped`);
+      const result = await api.post<ImportResult>(`/events/${eventId}/guests/import`, {
+        csv: preview.csv,
+      });
+      toast.success(
+        `Imported ${result.imported} guest(s), ${result.duplicates} duplicate(s) skipped`,
+      );
       if (result.errors.length > 0) {
-        toast.warning(`${result.errors.length} row(s) had errors (e.g. row ${result.errors[0]?.row}: ${result.errors[0]?.message})`);
+        toast.warning(
+          `${result.errors.length} row(s) had errors (e.g. row ${result.errors[0]?.row}: ${result.errors[0]?.message})`,
+        );
       }
       setPreview(null);
       invalidate();
@@ -142,10 +182,29 @@ export default function GuestsPage() {
                 e.target.value = "";
               }}
             />
-            <Button variant="outline" onClick={() => api.download(`/events/${eventId}/guests/import/template`, "guest-import-template.csv")}>Template</Button>
-            <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="mr-2 h-4 w-4" /> Import CSV</Button>
-            <Button variant="outline" onClick={() => api.download(`/events/${eventId}/guests/export`, "guests.csv")}><Download className="mr-2 h-4 w-4" /> Export</Button>
-            <Button onClick={() => setOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add guest</Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                api.download(
+                  `/events/${eventId}/guests/import/template`,
+                  "guest-import-template.csv",
+                )
+              }
+            >
+              Template
+            </Button>
+            <Button variant="outline" onClick={() => fileRef.current?.click()}>
+              <Upload className="mr-2 h-4 w-4" /> Import CSV
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => api.download(`/events/${eventId}/guests/export`, "guests.csv")}
+            >
+              <Download className="mr-2 h-4 w-4" /> Export
+            </Button>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Add guest
+            </Button>
           </>
         }
       />
@@ -158,10 +217,16 @@ export default function GuestsPage() {
           aria-label="Search guests"
         />
         <Select value={rsvpFilter} onValueChange={setRsvpFilter}>
-          <SelectTrigger className="w-44" aria-label="Filter by RSVP"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-44" aria-label="Filter by RSVP">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All RSVPs</SelectItem>
-            {RSVP_STATUSES.map((s) => <SelectItem key={s} value={s}>{labelize(s)}</SelectItem>)}
+            {RSVP_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {labelize(s)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -181,23 +246,49 @@ export default function GuestsPage() {
             </TableHeader>
             <TableBody>
               {guests.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No guests yet — add one or import a CSV.</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                    No guests yet — add one or import a CSV.
+                  </TableCell>
+                </TableRow>
               )}
               {guests.map((g) => (
                 <TableRow key={g.id}>
-                  <TableCell className="font-medium">{g.firstName} {g.lastName}</TableCell>
+                  <TableCell className="font-medium">
+                    {g.firstName} {g.lastName}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{g.group?.name ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{g.email ?? "—"}</TableCell>
                   <TableCell className="text-right">{g.accompanyingCount}</TableCell>
-                  <TableCell><StatusBadge status={g.invitationStatus} /></TableCell>
                   <TableCell>
-                    <Select value={g.rsvpStatus} onValueChange={(v) => setRsvp.mutate({ guest: g, rsvpStatus: v })}>
-                      <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
-                      <SelectContent>{RSVP_STATUSES.map((s) => <SelectItem key={s} value={s}>{labelize(s)}</SelectItem>)}</SelectContent>
+                    <StatusBadge status={g.invitationStatus} />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={g.rsvpStatus}
+                      onValueChange={(v) => setRsvp.mutate({ guest: g, rsvpStatus: v })}
+                    >
+                      <SelectTrigger className="h-8 w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RSVP_STATUSES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {labelize(s)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </TableCell>
                   <TableCell>
-                    <Button size="icon" variant="ghost" aria-label={`Remove ${g.firstName} ${g.lastName}`} onClick={() => remove.mutate(g.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Remove ${g.firstName} ${g.lastName}`}
+                      onClick={() => remove.mutate(g.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -208,43 +299,83 @@ export default function GuestsPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Add guest</DialogTitle></DialogHeader>
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); create.mutate(); }}>
+          <DialogHeader>
+            <DialogTitle>Add guest</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              create.mutate();
+            }}
+          >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>First name</Label>
-                <Input required value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+                <Input
+                  required
+                  value={form.firstName}
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Last name</Label>
-                <Input required value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+                <Input
+                  required
+                  value={form.lastName}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Group</Label>
-                <Select value={form.groupId} onValueChange={(v) => setForm({ ...form, groupId: v })}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                  <SelectContent>{groups.map((g) => <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>)}</SelectContent>
+                <Select
+                  value={form.groupId}
+                  onValueChange={(v) => setForm({ ...form, groupId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groups.map((g) => (
+                      <SelectItem key={g.id} value={String(g.id)}>
+                        {g.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Accompanying guests</Label>
-                <Input type="number" min={0} value={form.accompanyingCount} onChange={(e) => setForm({ ...form, accompanyingCount: e.target.value })} />
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.accompanyingCount}
+                  onChange={(e) => setForm({ ...form, accompanyingCount: e.target.value })}
+                />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={create.isPending}>Add guest</Button>
+            <Button type="submit" className="w-full" disabled={create.isPending}>
+              Add guest
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={preview !== null} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Import preview</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Import preview</DialogTitle>
+          </DialogHeader>
           {preview && (
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-3 gap-3 text-center">
@@ -264,14 +395,24 @@ export default function GuestsPage() {
               {preview.result.errors.length > 0 && (
                 <ul className="max-h-32 space-y-1 overflow-y-auto rounded-md border p-2 text-xs text-destructive">
                   {preview.result.errors.map((e) => (
-                    <li key={e.row}>Row {e.row}: {e.message}</li>
+                    <li key={e.row}>
+                      Row {e.row}: {e.message}
+                    </li>
                   ))}
                 </ul>
               )}
-              <p className="text-xs text-muted-foreground">Nothing has been written yet. Confirm to import.</p>
+              <p className="text-xs text-muted-foreground">
+                Nothing has been written yet. Confirm to import.
+              </p>
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setPreview(null)}>Cancel</Button>
-                <Button className="flex-1" disabled={importing || preview.result.imported === 0} onClick={confirmImport}>
+                <Button variant="outline" className="flex-1" onClick={() => setPreview(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={importing || preview.result.imported === 0}
+                  onClick={confirmImport}
+                >
                   {importing ? "Importing…" : "Confirm import"}
                 </Button>
               </div>

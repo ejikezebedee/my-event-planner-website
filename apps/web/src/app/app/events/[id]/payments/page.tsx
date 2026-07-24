@@ -6,11 +6,35 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-  Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-  Skeleton, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Textarea,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Textarea,
 } from "@mep/ui";
 import { PAYMENT_METHODS, labelize } from "@mep/types";
 import { api, ApiError } from "@/lib/api";
@@ -32,7 +56,12 @@ export default function PaymentsPage() {
   const [reversing, setReversing] = useState<Payment | null>(null);
   const [reason, setReason] = useState("");
   const [refunding, setRefunding] = useState<Payment | null>(null);
-  const [refund, setRefund] = useState({ amount: 0, method: "bank_transfer", paidAt: "", reference: "" });
+  const [refund, setRefund] = useState({
+    amount: 0,
+    method: "bank_transfer",
+    paidAt: "",
+    reference: "",
+  });
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["payments", eventId] });
@@ -41,8 +70,7 @@ export default function PaymentsPage() {
   };
 
   const reverse = useMutation({
-    mutationFn: () =>
-      api.post(`/events/${eventId}/payments/${reversing!.id}/reverse`, { reason }),
+    mutationFn: () => api.post(`/events/${eventId}/payments/${reversing!.id}/reverse`, { reason }),
     onSuccess: () => {
       toast.success("Payment reversed — history preserved");
       setReversing(null);
@@ -91,7 +119,15 @@ export default function PaymentsPage() {
           <>
             Net paid: <MoneyText minor={netTotal} currency={currency} className="font-medium" />
             {refundedTotal > 0 && (
-              <> · Refunded: <MoneyText minor={refundedTotal} currency={currency} className="font-medium text-destructive" /></>
+              <>
+                {" "}
+                · Refunded:{" "}
+                <MoneyText
+                  minor={refundedTotal}
+                  currency={currency}
+                  className="font-medium text-destructive"
+                />
+              </>
             )}
           </>
         }
@@ -113,14 +149,22 @@ export default function PaymentsPage() {
           </TableHeader>
           <TableBody>
             {payments.data.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="py-8 text-center text-muted-foreground">No payments recorded yet.</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                  No payments recorded yet.
+                </TableCell>
+              </TableRow>
             )}
             {payments.data.map((p) => (
               <TableRow key={p.id} className={p.reversedAt ? "opacity-60" : ""}>
-                <TableCell className="font-medium">{p.expense?.title ?? `#${p.expenseId}`}</TableCell>
+                <TableCell className="font-medium">
+                  {p.expense?.title ?? `#${p.expenseId}`}
+                </TableCell>
                 <TableCell>
                   {p.type === "refund" ? (
-                    <Badge variant="outline" className="text-destructive">Refund</Badge>
+                    <Badge variant="outline" className="text-destructive">
+                      Refund
+                    </Badge>
                   ) : (
                     <Badge variant="outline">Payment</Badge>
                   )}
@@ -130,14 +174,18 @@ export default function PaymentsPage() {
                 <TableCell className="text-muted-foreground">{p.reference ?? "—"}</TableCell>
                 <TableCell className="text-right">
                   {p.type === "refund" ? (
-                    <span className="text-destructive">−<MoneyText minor={p.amount} currency={currency} /></span>
+                    <span className="text-destructive">
+                      −<MoneyText minor={p.amount} currency={currency} />
+                    </span>
                   ) : (
                     <MoneyText minor={p.amount} currency={currency} />
                   )}
                 </TableCell>
                 <TableCell>
                   {p.reversedAt ? (
-                    <Badge variant="destructive" title={p.reversalReason ?? ""}>Reversed</Badge>
+                    <Badge variant="destructive" title={p.reversalReason ?? ""}>
+                      Reversed
+                    </Badge>
                   ) : (
                     <Badge variant="secondary">Active</Badge>
                   )}
@@ -146,11 +194,24 @@ export default function PaymentsPage() {
                   {!p.reversedAt && (
                     <div className="flex gap-1">
                       {p.type === "payment" && refundableFor(p) > 0 && (
-                        <Button size="sm" variant="outline" onClick={() => { setRefunding(p); setRefund({ ...refund, amount: refundableFor(p) }); }}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setRefunding(p);
+                            setRefund({ ...refund, amount: refundableFor(p) });
+                          }}
+                        >
                           Refund
                         </Button>
                       )}
-                      <Button size="icon" variant="ghost" title="Reverse record" aria-label={`Reverse ${p.type} of ${p.amount} for ${p.expense?.title ?? "expense"}`} onClick={() => setReversing(p)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Reverse record"
+                        aria-label={`Reverse ${p.type} of ${p.amount} for ${p.expense?.title ?? "expense"}`}
+                        onClick={() => setReversing(p)}
+                      >
                         <Undo2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -165,7 +226,9 @@ export default function PaymentsPage() {
       {/* Mobile cards: one card per payment with the key figures. */}
       <div className="space-y-3 md:hidden">
         {payments.data.length === 0 && (
-          <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">No payments recorded yet.</p>
+          <p className="rounded-lg border py-8 text-center text-sm text-muted-foreground">
+            No payments recorded yet.
+          </p>
         )}
         {payments.data.map((p) => (
           <div key={p.id} className={`rounded-lg border p-4 ${p.reversedAt ? "opacity-60" : ""}`}>
@@ -179,16 +242,24 @@ export default function PaymentsPage() {
               </div>
               <div className="flex shrink-0 gap-1">
                 {p.type === "refund" ? (
-                  <Badge variant="outline" className="text-destructive">Refund</Badge>
+                  <Badge variant="outline" className="text-destructive">
+                    Refund
+                  </Badge>
                 ) : (
                   <Badge variant="outline">Payment</Badge>
                 )}
-                {p.reversedAt && <Badge variant="destructive" title={p.reversalReason ?? ""}>Reversed</Badge>}
+                {p.reversedAt && (
+                  <Badge variant="destructive" title={p.reversalReason ?? ""}>
+                    Reversed
+                  </Badge>
+                )}
               </div>
             </div>
             <p className="mt-2 text-right text-lg font-semibold">
               {p.type === "refund" ? (
-                <span className="text-destructive">−<MoneyText minor={p.amount} currency={currency} /></span>
+                <span className="text-destructive">
+                  −<MoneyText minor={p.amount} currency={currency} />
+                </span>
               ) : (
                 <MoneyText minor={p.amount} currency={currency} />
               )}
@@ -196,11 +267,25 @@ export default function PaymentsPage() {
             {!p.reversedAt && (
               <div className="mt-2 flex gap-2">
                 {p.type === "payment" && refundableFor(p) > 0 && (
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => { setRefunding(p); setRefund({ ...refund, amount: refundableFor(p) }); }}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setRefunding(p);
+                      setRefund({ ...refund, amount: refundableFor(p) });
+                    }}
+                  >
                     Refund
                   </Button>
                 )}
-                <Button size="icon" variant="ghost" title="Reverse record" aria-label={`Reverse ${p.type} of ${p.amount} for ${p.expense?.title ?? "expense"}`} onClick={() => setReversing(p)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Reverse record"
+                  aria-label={`Reverse ${p.type} of ${p.amount} for ${p.expense?.title ?? "expense"}`}
+                  onClick={() => setReversing(p)}
+                >
                   <Undo2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -214,14 +299,21 @@ export default function PaymentsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Reverse this {reversing?.type ?? "payment"}?</AlertDialogTitle>
             <AlertDialogDescription>
-              The record of <MoneyText minor={reversing?.amount ?? 0} currency={currency} /> will be marked as
-              reversed. The record stays in the history — nothing is deleted.
+              The record of <MoneyText minor={reversing?.amount ?? 0} currency={currency} /> will be
+              marked as reversed. The record stays in the history — nothing is deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Textarea placeholder="Reason for the reversal (required)" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <Textarea
+            placeholder="Reason for the reversal (required)"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={!reason.trim() || reverse.isPending} onClick={() => reverse.mutate()}>
+            <AlertDialogAction
+              disabled={!reason.trim() || reverse.isPending}
+              onClick={() => reverse.mutate()}
+            >
               Reverse
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -230,37 +322,76 @@ export default function PaymentsPage() {
 
       <Dialog open={refunding !== null} onOpenChange={(o) => !o && setRefunding(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Refund payment — {refunding?.expense?.title}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Refund payment — {refunding?.expense?.title}</DialogTitle>
+          </DialogHeader>
           {refunding && (
-            <form className="space-y-4" onSubmit={(ev) => { ev.preventDefault(); refundMutation.mutate(); }}>
+            <form
+              className="space-y-4"
+              onSubmit={(ev) => {
+                ev.preventDefault();
+                refundMutation.mutate();
+              }}
+            >
               <p className="text-sm text-muted-foreground">
-                Refundable remainder: <MoneyText minor={refundableFor(refunding)} currency={currency} className="font-medium" />
+                Refundable remainder:{" "}
+                <MoneyText
+                  minor={refundableFor(refunding)}
+                  currency={currency}
+                  className="font-medium"
+                />
               </p>
               <div className="space-y-1.5">
                 <Label>Refund amount</Label>
-                <MoneyInput value={refund.amount} onChange={(v) => setRefund({ ...refund, amount: v })} currency={currency} />
+                <MoneyInput
+                  value={refund.amount}
+                  onChange={(v) => setRefund({ ...refund, amount: v })}
+                  currency={currency}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Method</Label>
-                  <Select value={refund.method} onValueChange={(v) => setRefund({ ...refund, method: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{labelize(m)}</SelectItem>)}</SelectContent>
+                  <Select
+                    value={refund.method}
+                    onValueChange={(v) => setRefund({ ...refund, method: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_METHODS.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {labelize(m)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Date</Label>
-                  <Input type="date" value={refund.paidAt} onChange={(ev) => setRefund({ ...refund, paidAt: ev.target.value })} />
+                  <Input
+                    type="date"
+                    value={refund.paidAt}
+                    onChange={(ev) => setRefund({ ...refund, paidAt: ev.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Reference</Label>
-                <Input value={refund.reference} onChange={(ev) => setRefund({ ...refund, reference: ev.target.value })} />
+                <Input
+                  value={refund.reference}
+                  onChange={(ev) => setRefund({ ...refund, reference: ev.target.value })}
+                />
               </div>
               <Button
                 type="submit"
                 className="w-full"
-                disabled={refundMutation.isPending || refund.amount <= 0 || refund.amount > refundableFor(refunding)}
+                disabled={
+                  refundMutation.isPending ||
+                  refund.amount <= 0 ||
+                  refund.amount > refundableFor(refunding)
+                }
               >
                 Record refund
               </Button>

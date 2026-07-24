@@ -49,46 +49,56 @@ export class RetentionService implements OnApplicationBootstrap, OnModuleDestroy
   /** One cleanup pass. Returns per-collection purge counts. */
   async cleanup() {
     const now = Date.now();
-    const [sessions, passwordTokens, verifyTokens, emailChangeTokens, invitations, notifications, contacts] =
-      await this.prisma.$transaction([
-        // Sessions that are revoked or expired, past the grace window.
-        this.prisma.session.deleteMany({
-          where: {
-            OR: [{ revokedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
-            createdAt: { lte: new Date(now - RETENTION.sessionGraceMs) },
-          },
-        }),
-        this.prisma.passwordResetToken.deleteMany({
-          where: {
-            OR: [{ usedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
-            createdAt: { lte: new Date(now - RETENTION.tokenGraceMs) },
-          },
-        }),
-        this.prisma.emailVerificationToken.deleteMany({
-          where: {
-            OR: [{ usedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
-            createdAt: { lte: new Date(now - RETENTION.tokenGraceMs) },
-          },
-        }),
-        this.prisma.emailChangeToken.deleteMany({
-          where: {
-            OR: [{ usedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
-            createdAt: { lte: new Date(now - RETENTION.tokenGraceMs) },
-          },
-        }),
-        this.prisma.workspaceInvitation.deleteMany({
-          where: {
-            OR: [{ acceptedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
-            createdAt: { lte: new Date(now - RETENTION.invitationGraceMs) },
-          },
-        }),
-        this.prisma.notification.deleteMany({
-          where: { readAt: { not: null }, createdAt: { lte: new Date(now - RETENTION.readNotificationMs) } },
-        }),
-        this.prisma.contactSubmission.deleteMany({
-          where: { createdAt: { lte: new Date(now - RETENTION.contactSubmissionMs) } },
-        }),
-      ]);
+    const [
+      sessions,
+      passwordTokens,
+      verifyTokens,
+      emailChangeTokens,
+      invitations,
+      notifications,
+      contacts,
+    ] = await this.prisma.$transaction([
+      // Sessions that are revoked or expired, past the grace window.
+      this.prisma.session.deleteMany({
+        where: {
+          OR: [{ revokedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
+          createdAt: { lte: new Date(now - RETENTION.sessionGraceMs) },
+        },
+      }),
+      this.prisma.passwordResetToken.deleteMany({
+        where: {
+          OR: [{ usedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
+          createdAt: { lte: new Date(now - RETENTION.tokenGraceMs) },
+        },
+      }),
+      this.prisma.emailVerificationToken.deleteMany({
+        where: {
+          OR: [{ usedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
+          createdAt: { lte: new Date(now - RETENTION.tokenGraceMs) },
+        },
+      }),
+      this.prisma.emailChangeToken.deleteMany({
+        where: {
+          OR: [{ usedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
+          createdAt: { lte: new Date(now - RETENTION.tokenGraceMs) },
+        },
+      }),
+      this.prisma.workspaceInvitation.deleteMany({
+        where: {
+          OR: [{ acceptedAt: { not: null } }, { expiresAt: { lte: new Date(now) } }],
+          createdAt: { lte: new Date(now - RETENTION.invitationGraceMs) },
+        },
+      }),
+      this.prisma.notification.deleteMany({
+        where: {
+          readAt: { not: null },
+          createdAt: { lte: new Date(now - RETENTION.readNotificationMs) },
+        },
+      }),
+      this.prisma.contactSubmission.deleteMany({
+        where: { createdAt: { lte: new Date(now - RETENTION.contactSubmissionMs) } },
+      }),
+    ]);
     return {
       sessions: sessions.count,
       passwordResetTokens: passwordTokens.count,

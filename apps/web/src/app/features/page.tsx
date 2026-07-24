@@ -1,7 +1,5 @@
 import Link from "next/link";
-import {
-  Bell, CalendarRange, FileText, Receipt, ShieldCheck, Users, Wallet,
-} from "lucide-react";
+import { Bell, CalendarRange, FileText, Receipt, ShieldCheck, Users, Wallet } from "lucide-react";
 import { Button, Card, CardContent } from "@mep/ui";
 import { PublicFooter, PublicNav } from "@/components/public-nav";
 
@@ -100,7 +98,9 @@ export default function FeaturesPage() {
         ))}
       </section>
       <section className="container pb-16 text-center">
-        <Button size="lg" asChild><Link href="/register">Try it now</Link></Button>
+        <Button size="lg" asChild>
+          <Link href="/register">Try it now</Link>
+        </Button>
       </section>
       <PublicFooter />
     </main>

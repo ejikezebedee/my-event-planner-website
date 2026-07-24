@@ -5,7 +5,15 @@ import { Input } from "@mep/ui";
 import { parseMoneyToMinor } from "@mep/types";
 import { formatMoney } from "@/lib/money";
 
-export function MoneyText({ minor, currency = "EUR", className }: { minor: number | null | undefined; currency?: string; className?: string }) {
+export function MoneyText({
+  minor,
+  currency = "EUR",
+  className,
+}: {
+  minor: number | null | undefined;
+  currency?: string;
+  className?: string;
+}) {
   return <span className={className}>{formatMoney(minor, currency)}</span>;
 }
 
@@ -31,7 +39,6 @@ export function MoneyInput({
 
   useEffect(() => {
     setText(value === 0 ? "" : (value / 100).toFixed(2));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return (

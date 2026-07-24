@@ -53,7 +53,9 @@ export default function FaqPage() {
         </div>
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground">Still curious?</p>
-          <Button variant="outline" className="mt-3" asChild><Link href="/contact">Contact us</Link></Button>
+          <Button variant="outline" className="mt-3" asChild>
+            <Link href="/contact">Contact us</Link>
+          </Button>
         </div>
       </section>
       <PublicFooter />

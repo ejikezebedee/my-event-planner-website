@@ -5,7 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, CalendarDays, CalendarRange, LayoutDashboard, LogOut, MailWarning, Menu, Settings } from "lucide-react";
+import {
+  Bell,
+  CalendarDays,
+  CalendarRange,
+  LayoutDashboard,
+  LogOut,
+  MailWarning,
+  Menu,
+  Settings,
+} from "lucide-react";
 import {
   Badge,
   Button,
@@ -19,7 +28,13 @@ import {
   SheetTrigger,
   Skeleton,
 } from "@mep/ui";
-import { setSelectedWorkspaceId, useCurrentWorkspace, useLogout, useMe, useUnreadCount } from "@/lib/hooks";
+import {
+  setSelectedWorkspaceId,
+  useCurrentWorkspace,
+  useLogout,
+  useMe,
+  useUnreadCount,
+} from "@/lib/hooks";
 import { api, ApiError } from "@/lib/api";
 
 /** Persistent banner while the account's email address is unverified (C4). */
@@ -28,7 +43,8 @@ function VerifyEmailBanner() {
   const resend = useMutation({
     mutationFn: () => api.post("/auth/resend-verification"),
     onSuccess: () => toast.success("Verification email sent — check your inbox"),
-    onError: (err) => toast.error(err instanceof ApiError ? err.message : "Could not send verification email"),
+    onError: (err) =>
+      toast.error(err instanceof ApiError ? err.message : "Could not send verification email"),
   });
   if (!me.data || me.data.emailVerifiedAt) return null;
   return (
@@ -71,13 +87,17 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={item.href}
             onClick={onNavigate}
             className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-              active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              active
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
             <item.icon className="h-4 w-4" />
             {item.label}
             {item.href === "/app/notifications" && unread.data && unread.data.count > 0 && (
-              <Badge variant="destructive" className="ml-auto">{unread.data.count}</Badge>
+              <Badge variant="destructive" className="ml-auto">
+                {unread.data.count}
+              </Badge>
             )}
           </Link>
         );
@@ -98,10 +118,14 @@ function WorkspacePicker() {
             window.location.reload();
           }}
         >
-          <SelectTrigger><SelectValue placeholder="Workspace" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Workspace" />
+          </SelectTrigger>
           <SelectContent>
             {workspaces.map((w) => (
-              <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+              <SelectItem key={w.id} value={String(w.id)}>
+                {w.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -123,7 +147,12 @@ function UserFooter() {
         <p className="truncate text-sm font-medium">{me.data?.name ?? "…"}</p>
         <p className="truncate text-xs text-muted-foreground">{me.data?.email}</p>
       </div>
-      <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => logout.mutate()}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start"
+        onClick={() => logout.mutate()}
+      >
         <LogOut className="mr-2 h-4 w-4" /> Log out
       </Button>
     </div>
@@ -138,7 +167,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="hidden w-60 flex-col border-r bg-card md:flex">
         <div className="border-b p-4">
-          <Link href="/app" className="font-semibold">My Event Planner</Link>
+          <Link href="/app" className="font-semibold">
+            My Event Planner
+          </Link>
         </div>
         <WorkspacePicker />
         <NavLinks />
@@ -150,7 +181,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex items-center gap-2 border-b bg-card px-4 py-3 md:hidden">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open menu"><Menu className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex w-64 flex-col p-0 pt-4">
               <div className="border-b px-4 pb-3 font-semibold">My Event Planner</div>
@@ -159,7 +192,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <UserFooter />
             </SheetContent>
           </Sheet>
-          <Link href="/app" className="font-semibold">My Event Planner</Link>
+          <Link href="/app" className="font-semibold">
+            My Event Planner
+          </Link>
         </header>
         <VerifyEmailBanner />
         <main className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">{children}</main>

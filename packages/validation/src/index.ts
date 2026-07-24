@@ -14,10 +14,7 @@ import {
 } from "@mep/types";
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(320);
-export const passwordSchema = z
-  .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(128);
+export const passwordSchema = z.string().min(8, "Password must be at least 8 characters").max(128);
 /** Integer minor units — money is never a float. */
 export const moneySchema = z.number().int().min(0);
 export const idSchema = z.number().int().positive();
@@ -60,30 +57,28 @@ export const deleteAccountSchema = z.object({
 });
 
 // Events
-export const eventObjectSchema = z
-  .object({
-    workspaceId: idSchema.optional(),
-    name: z.string().trim().min(1).max(255),
-    type: z.enum(EVENT_TYPES).default("other"),
-    description: z.string().max(5000).nullish(),
-    startAt: z.coerce.date().nullish(),
-    endAt: z.coerce.date().nullish(),
-    timezone: z.string().max(64).optional(),
-    venueName: z.string().max(255).nullish(),
-    street: z.string().max(255).nullish(),
-    city: z.string().max(128).nullish(),
-    state: z.string().max(128).nullish(),
-    postalCode: z.string().max(32).nullish(),
-    country: z.string().max(128).nullish(),
-    expectedGuests: z.number().int().min(0).nullish(),
-    currency: z.string().length(3).default("EUR"),
-    budgetAmount: moneySchema.default(0),
-    notes: z.string().max(5000).nullish(),
-    status: z
-      .enum(["draft", "planning", "confirmed", "in_progress", "completed", "cancelled"])
-      .default("draft"),
-  })
-;
+export const eventObjectSchema = z.object({
+  workspaceId: idSchema.optional(),
+  name: z.string().trim().min(1).max(255),
+  type: z.enum(EVENT_TYPES).default("other"),
+  description: z.string().max(5000).nullish(),
+  startAt: z.coerce.date().nullish(),
+  endAt: z.coerce.date().nullish(),
+  timezone: z.string().max(64).optional(),
+  venueName: z.string().max(255).nullish(),
+  street: z.string().max(255).nullish(),
+  city: z.string().max(128).nullish(),
+  state: z.string().max(128).nullish(),
+  postalCode: z.string().max(32).nullish(),
+  country: z.string().max(128).nullish(),
+  expectedGuests: z.number().int().min(0).nullish(),
+  currency: z.string().length(3).default("EUR"),
+  budgetAmount: moneySchema.default(0),
+  notes: z.string().max(5000).nullish(),
+  status: z
+    .enum(["draft", "planning", "confirmed", "in_progress", "completed", "cancelled"])
+    .default("draft"),
+});
 export const eventUpsertSchema = eventObjectSchema.refine(
   (v) => !(v.startAt && v.endAt && v.endAt < v.startAt),
   {

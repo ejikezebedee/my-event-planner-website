@@ -140,7 +140,10 @@ export class AuthController {
     const { email } = body as { email: string };
     await this.auth.requestPasswordReset(email);
     // Generic response — never reveal whether the account exists.
-    return { ok: true, message: "If an account exists for this email, a reset link has been sent." };
+    return {
+      ok: true,
+      message: "If an account exists for this email, a reset link has been sent.",
+    };
   }
 
   @Public()
@@ -197,9 +200,16 @@ export class AuthController {
   @Get("account-export")
   async exportAccount(@CurrentUser() user: AuthUser, @Res() res: Response) {
     const data = await this.auth.exportAccountData(user.id);
-    const json = JSON.stringify(data, (_key, value) => typeof value === "bigint" ? value.toString() : value, 2);
+    const json = JSON.stringify(
+      data,
+      (_key, value) => (typeof value === "bigint" ? value.toString() : value),
+      2,
+    );
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="my-event-planner-data-${new Date().toISOString().slice(0, 10)}.json"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="my-event-planner-data-${new Date().toISOString().slice(0, 10)}.json"`,
+    );
     res.setHeader("Cache-Control", "no-store");
     res.send(json);
   }

@@ -60,7 +60,9 @@ export class MailerService {
       this.logger.error(`Mail send failed via ${provider}: ${(err as Error).message}`);
       return { delivered: false, provider };
     }
-    this.logger.log(`[console mail] to=${message.to} subject="${message.subject}"\n${message.text}`);
+    this.logger.log(
+      `[console mail] to=${message.to} subject="${message.subject}"\n${message.text}`,
+    );
     return { delivered: true, provider: "console" };
   }
 }

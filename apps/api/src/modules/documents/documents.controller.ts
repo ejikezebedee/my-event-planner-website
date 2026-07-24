@@ -38,7 +38,9 @@ export class DocumentsController {
   }
 
   @Post("events/:eventId/documents")
-  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: env.MAX_UPLOAD_MB * 1024 * 1024 } }))
+  @UseInterceptors(
+    FileInterceptor("file", { limits: { fileSize: env.MAX_UPLOAD_MB * 1024 * 1024 } }),
+  )
   upload(
     @CurrentUser() user: AuthUser,
     @Param("eventId", ParseIntPipe) eventId: number,

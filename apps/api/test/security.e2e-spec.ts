@@ -16,7 +16,9 @@ describe("security: isolation and uploads (e2e)", () => {
     const health = await request(BASE).get("/api/v1/health");
     expect(health.status).toBe(200);
 
-    await demo.post("/api/v1/auth/login").send({ email: "demo@eventplanner.dev", password: "Demo1234!" });
+    await demo
+      .post("/api/v1/auth/login")
+      .send({ email: "demo@eventplanner.dev", password: "Demo1234!" });
     // A second, unrelated user with their own default workspace.
     const reg = await outsider.post("/api/v1/auth/register").send({
       name: "Outsider",
@@ -89,9 +91,7 @@ describe("security: isolation and uploads (e2e)", () => {
 
   it("rejects oversized uploads", async () => {
     const big = Buffer.alloc(11 * 1024 * 1024, 1); // 11 MB > 10 MB limit
-    const res = await demo
-      .post("/api/v1/events/1/documents")
-      .attach("file", big, "big.pdf");
+    const res = await demo.post("/api/v1/events/1/documents").attach("file", big, "big.pdf");
     expect(res.status).toBe(413);
   });
 

@@ -6,8 +6,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Button, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-  Skeleton, Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Button,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@mep/ui";
 import { DOCUMENT_CATEGORIES, labelize } from "@mep/types";
 import { api, ApiError } from "@/lib/api";
@@ -101,18 +113,30 @@ export default function DocumentsPage() {
             <div className="space-y-1">
               <Label className="text-xs">Category</Label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-                <SelectContent>{DOCUMENT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{labelize(c)}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-9 w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {labelize(c)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Receipt for</Label>
               <Select value={expenseId} onValueChange={setExpenseId}>
-                <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 w-44">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No expense</SelectItem>
                   {(expenses.data ?? []).map((e) => (
-                    <SelectItem key={e.id} value={String(e.id)}>{e.title}</SelectItem>
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.title}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -120,37 +144,63 @@ export default function DocumentsPage() {
             <div className="space-y-1">
               <Label className="text-xs">Proof of</Label>
               <Select value={paymentId} onValueChange={setPaymentId}>
-                <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 w-44">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No payment</SelectItem>
-                  {(payments.data ?? []).filter((p) => !p.reversedAt).map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.expense?.title ?? `#${p.expenseId}`} · {p.type === "refund" ? "refund " : ""}{(p.amount / 100).toFixed(2)}
+                  {(payments.data ?? [])
+                    .filter((p) => !p.reversedAt)
+                    .map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.expense?.title ?? `#${p.expenseId}`} ·{" "}
+                        {p.type === "refund" ? "refund " : ""}
+                        {(p.amount / 100).toFixed(2)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Vendor</Label>
+              <Select
+                value={vendorId}
+                onValueChange={(v) => {
+                  setVendorId(v);
+                  if (v !== "none") setTaskId("none");
+                }}
+              >
+                <SelectTrigger className="h-9 w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No vendor</SelectItem>
+                  {(vendors.data ?? []).map((l) => (
+                    <SelectItem key={l.vendorId} value={String(l.vendorId)}>
+                      {l.vendor.businessName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Vendor</Label>
-              <Select value={vendorId} onValueChange={(v) => { setVendorId(v); if (v !== "none") setTaskId("none"); }}>
-                <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No vendor</SelectItem>
-                  {(vendors.data ?? []).map((l) => (
-                    <SelectItem key={l.vendorId} value={String(l.vendorId)}>{l.vendor.businessName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
               <Label className="text-xs">Task</Label>
-              <Select value={taskId} onValueChange={(v) => { setTaskId(v); if (v !== "none") setVendorId("none"); }}>
-                <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+              <Select
+                value={taskId}
+                onValueChange={(v) => {
+                  setTaskId(v);
+                  if (v !== "none") setVendorId("none");
+                }}
+              >
+                <SelectTrigger className="h-9 w-40">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No task</SelectItem>
                   {(tasks.data ?? []).map((t) => (
-                    <SelectItem key={t.id} value={String(t.id)}>{t.title}</SelectItem>
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.title}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -185,7 +235,11 @@ export default function DocumentsPage() {
           </TableHeader>
           <TableBody>
             {documents.data.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No documents yet.</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  No documents yet.
+                </TableCell>
+              </TableRow>
             )}
             {documents.data.map((doc) => (
               <TableRow key={doc.id}>
@@ -208,13 +262,29 @@ export default function DocumentsPage() {
                     .join(" · ") || "—"}
                 </TableCell>
                 <TableCell className="text-right">{formatSize(doc.sizeBytes)}</TableCell>
-                <TableCell className="text-muted-foreground">{formatDateTime(doc.createdAt)}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDateTime(doc.createdAt)}
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" aria-label={`Download ${doc.originalName}`} onClick={() => api.download(`/documents/${doc.id}/download`, doc.originalName)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Download ${doc.originalName}`}
+                      onClick={() =>
+                        api.download(`/documents/${doc.id}/download`, doc.originalName)
+                      }
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" aria-label={`Delete ${doc.originalName}`} onClick={() => { if (confirm("Delete this document?")) remove.mutate(doc.id); }}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Delete ${doc.originalName}`}
+                      onClick={() => {
+                        if (confirm("Delete this document?")) remove.mutate(doc.id);
+                      }}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

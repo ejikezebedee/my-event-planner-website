@@ -15,15 +15,21 @@ test("PWA manifest is linked and served", async ({ page }) => {
 test("service worker registers and serves the offline page", async ({ page, context }) => {
   await page.goto("/");
   // Wait until the SW is registered and activated
-  await page.waitForFunction(async () => {
-    if (!("serviceWorker" in navigator)) return false;
-    const reg = await navigator.serviceWorker.getRegistration();
-    return reg?.active?.state === "activated";
-  }, undefined, { timeout: 15_000 });
+  await page.waitForFunction(
+    async () => {
+      if (!("serviceWorker" in navigator)) return false;
+      const reg = await navigator.serviceWorker.getRegistration();
+      return reg?.active?.state === "activated";
+    },
+    undefined,
+    { timeout: 15_000 },
+  );
 
   // Reload so the activated SW controls this client before we go offline.
   await page.reload();
-  await page.waitForFunction(() => !!navigator.serviceWorker.controller, undefined, { timeout: 15_000 });
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller, undefined, {
+    timeout: 15_000,
+  });
 
   // Go offline: navigation falls back to the offline page (never a cached
   // /app page — authenticated pages are not cached, see sw.js).

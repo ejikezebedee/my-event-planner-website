@@ -103,7 +103,12 @@ export function CalendarView({
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" aria-label="Previous period" onClick={() => shift(-1)}>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Previous period"
+            onClick={() => shift(-1)}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="icon" aria-label="Next period" onClick={() => shift(1)}>
@@ -128,7 +133,12 @@ export function CalendarView({
         <h2 className="text-lg font-semibold">{title}</h2>
         <div className="ml-auto flex gap-1">
           {(["month", "week", "agenda"] as const).map((v) => (
-            <Button key={v} size="sm" variant={view === v ? "default" : "outline"} onClick={() => setView(v)}>
+            <Button
+              key={v}
+              size="sm"
+              variant={view === v ? "default" : "outline"}
+              onClick={() => setView(v)}
+            >
               {v === "month" ? "Month" : v === "week" ? "Week" : "Agenda"}
             </Button>
           ))}
@@ -145,7 +155,13 @@ export function CalendarView({
 
       <div className="mt-4 flex flex-wrap gap-2">
         {Object.entries(KIND_LABELS).map(([kind, label]) => (
-          <span key={kind} className={cn("inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs", KIND_STYLES[kind])}>
+          <span
+            key={kind}
+            className={cn(
+              "inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs",
+              KIND_STYLES[kind],
+            )}
+          >
             {label}
           </span>
         ))}
@@ -180,7 +196,9 @@ function DayGrid({
     <div className="rounded-lg border">
       <div className="grid grid-cols-7 border-b bg-muted/50 text-center text-xs font-medium text-muted-foreground">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-          <div key={d} className="py-2">{d}</div>
+          <div key={d} className="py-2">
+            {d}
+          </div>
         ))}
       </div>
       <div className={cn("grid grid-cols-7", view === "month" && "grid-rows-6")}>
@@ -206,20 +224,29 @@ function DayGrid({
                 >
                   {day.getDate()}
                 </span>
-                {key === eventDay && <Badge variant="secondary" className="text-[10px]">Event day</Badge>}
+                {key === eventDay && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Event day
+                  </Badge>
+                )}
               </div>
               <div className="space-y-1">
                 {dayItems.slice(0, view === "week" ? 20 : 3).map((item) => (
                   <div
                     key={item.key}
                     title={item.title}
-                    className={cn("truncate rounded border px-1 py-0.5 text-[11px]", KIND_STYLES[item.kind])}
+                    className={cn(
+                      "truncate rounded border px-1 py-0.5 text-[11px]",
+                      KIND_STYLES[item.kind],
+                    )}
                   >
                     {item.title}
                   </div>
                 ))}
                 {view === "month" && dayItems.length > 3 && (
-                  <div className="text-[10px] text-muted-foreground">+{dayItems.length - 3} more</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    +{dayItems.length - 3} more
+                  </div>
                 )}
               </div>
             </div>
@@ -232,7 +259,11 @@ function DayGrid({
 
 function AgendaList({ items, eventDay }: { items: CalendarItem[]; eventDay: string | null }) {
   if (items.length === 0) {
-    return <p className="rounded-lg border py-12 text-center text-muted-foreground">Nothing scheduled in this period.</p>;
+    return (
+      <p className="rounded-lg border py-12 text-center text-muted-foreground">
+        Nothing scheduled in this period.
+      </p>
+    );
   }
   let lastDay = "";
   return (
@@ -251,9 +282,14 @@ function AgendaList({ items, eventDay }: { items: CalendarItem[]; eventDay: stri
             )}
             <div className="ml-2 flex items-center gap-3 rounded-md border px-3 py-2">
               <span className="w-14 text-xs text-muted-foreground">
-                {new Date(item.startAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(item.startAt).toLocaleTimeString("de-DE", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
-              <span className={cn("rounded border px-1.5 py-0.5 text-[10px]", KIND_STYLES[item.kind])}>
+              <span
+                className={cn("rounded border px-1.5 py-0.5 text-[10px]", KIND_STYLES[item.kind])}
+              >
                 {KIND_LABELS[item.kind] ?? item.kind}
               </span>
               <span className="text-sm">{item.title}</span>

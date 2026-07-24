@@ -47,17 +47,32 @@ export class WorkspacesService {
         members: { create: { userId, role: "owner" } },
       },
     });
-    await this.audit.log({ actorId: userId, workspaceId: workspace.id, action: "workspace.create", resourceType: "workspace", resourceId: workspace.id });
+    await this.audit.log({
+      actorId: userId,
+      workspaceId: workspace.id,
+      action: "workspace.create",
+      resourceType: "workspace",
+      resourceId: workspace.id,
+    });
     return workspace;
   }
 
-  async update(userId: bigint, workspaceId: bigint, input: { name?: string; currency?: string; timezone?: string }) {
+  async update(
+    userId: bigint,
+    workspaceId: bigint,
+    input: { name?: string; currency?: string; timezone?: string },
+  ) {
     await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin"]);
     return this.prisma.workspace.update({ where: { id: workspaceId }, data: input });
   }
 
   async members(userId: bigint, workspaceId: bigint) {
-    await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin", "planner", "viewer"]);
+    await this.access.assertWorkspaceRole(userId, workspaceId, [
+      "owner",
+      "admin",
+      "planner",
+      "viewer",
+    ]);
     return this.prisma.workspaceMember.findMany({
       where: { workspaceId },
       include: { user: { select: { id: true, name: true, email: true } } },
@@ -90,7 +105,14 @@ export class WorkspacesService {
       subject: `You've been invited to "${workspace.name}"`,
       text: `You were invited to join the workspace "${workspace.name}" as ${role}.\n\nAccept the invitation (valid 7 days):\n${link}`,
     });
-    await this.audit.log({ actorId: userId, workspaceId, action: "workspace.invite", resourceType: "workspace_invitation", resourceId: invitation.id, metadata: { email, role } });
+    await this.audit.log({
+      actorId: userId,
+      workspaceId,
+      action: "workspace.invite",
+      resourceType: "workspace_invitation",
+      resourceId: invitation.id,
+      metadata: { email, role },
+    });
     return { ok: true };
   }
 
@@ -118,11 +140,18 @@ export class WorkspacesService {
     return { workspaceId: invitation.workspaceId };
   }
 
-  async updateMemberRole(userId: bigint, workspaceId: bigint, memberId: bigint, role: WorkspaceRole) {
+  async updateMemberRole(
+    userId: bigint,
+    workspaceId: bigint,
+    memberId: bigint,
+    role: WorkspaceRole,
+  ) {
     await this.access.assertWorkspaceRole(userId, workspaceId, ["owner"]);
     const member = await this.prisma.workspaceMember.findUnique({ where: { id: memberId } });
-    if (!member || member.workspaceId !== workspaceId) throw new NotFoundException("Member not found");
-    if (member.role === "owner") throw new BadRequestException("The workspace owner's role cannot be changed");
+    if (!member || member.workspaceId !== workspaceId)
+      throw new NotFoundException("Member not found");
+    if (member.role === "owner")
+      throw new BadRequestException("The workspace owner's role cannot be changed");
     return this.prisma.workspaceMember.update({ where: { id: memberId }, data: { role } });
   }
 
@@ -141,16 +170,19 @@ export class WorkspacesService {
       where: { id: memberId },
       include: { user: true },
     });
-    if (!member || member.workspaceId !== workspaceId) throw new NotFoundException("Member not found");
+    if (!member || member.workspaceId !== workspaceId)
+      throw new NotFoundException("Member not found");
     if (member.userId === userId) throw new BadRequestException("You already own this workspace");
-    if (!member.user.emailVerifiedAt) throw new BadRequestException("The new owner must have a verified email address");
+    if (!member.user.emailVerifiedAt)
+      throw new BadRequestException("The new owner must have a verified email address");
 
     await this.prisma.$transaction(async (tx) => {
       const ownershipUpdate = await tx.workspace.updateMany({
         where: { id: workspaceId, ownerId: userId },
         data: { ownerId: member.userId },
       });
-      if (ownershipUpdate.count !== 1) throw new ConflictException("Workspace ownership changed; reload and try again");
+      if (ownershipUpdate.count !== 1)
+        throw new ConflictException("Workspace ownership changed; reload and try again");
       await tx.workspaceMember.updateMany({
         where: { workspaceId, role: "owner" },
         data: { role: "admin" },
@@ -178,11 +210,19 @@ export class WorkspacesService {
   async removeMember(userId: bigint, workspaceId: bigint, memberId: bigint) {
     await this.access.assertWorkspaceRole(userId, workspaceId, ["owner", "admin"]);
     const member = await this.prisma.workspaceMember.findUnique({ where: { id: memberId } });
-    if (!member || member.workspaceId !== workspaceId) throw new NotFoundException("Member not found");
-    if (member.role === "owner") throw new BadRequestException("The workspace owner cannot be removed");
+    if (!member || member.workspaceId !== workspaceId)
+      throw new NotFoundException("Member not found");
+    if (member.role === "owner")
+      throw new BadRequestException("The workspace owner cannot be removed");
     if (member.userId === userId) throw new BadRequestException("You cannot remove yourself");
     await this.prisma.workspaceMember.delete({ where: { id: memberId } });
-    await this.audit.log({ actorId: userId, workspaceId, action: "workspace.remove_member", resourceType: "workspace_member", resourceId: memberId });
+    await this.audit.log({
+      actorId: userId,
+      workspaceId,
+      action: "workspace.remove_member",
+      resourceType: "workspace_member",
+      resourceId: memberId,
+    });
     return { ok: true };
   }
 }

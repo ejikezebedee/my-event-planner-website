@@ -3,7 +3,16 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@mep/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@mep/ui";
 import { api } from "@/lib/api";
 
 function ResetForm() {
@@ -40,13 +49,23 @@ function ResetForm() {
         ) : done ? (
           <div className="space-y-4">
             <p className="text-sm">Your password has been reset. You can now log in.</p>
-            <Button className="w-full" asChild><Link href="/login">Log in</Link></Button>
+            <Button className="w-full" asChild>
+              <Link href="/login">Log in</Link>
+            </Button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="password">New password</Label>
-              <Input id="password" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={busy}>

@@ -38,7 +38,11 @@ const PASSWORD = "Remediation123!";
 type LinkKind = "verify-email" | "invite" | "confirm-email-change";
 
 /** Pull the newest emailed link token of a kind from a console-mailer log. */
-async function emailedToken(kind: LinkKind, to: string, logPath: string = LOG_PATH): Promise<string> {
+async function emailedToken(
+  kind: LinkKind,
+  to: string,
+  logPath: string = LOG_PATH,
+): Promise<string> {
   for (let attempt = 0; attempt < 24; attempt++) {
     let log = "";
     try {
@@ -85,7 +89,9 @@ beforeAll(async () => {
   expect(ws.status).toBe(201);
   workspaceId = ws.body.id;
   for (const name of ["Remediation Event A", "Remediation Event B"]) {
-    const ev = await owner.post("/api/v1/events").send({ workspaceId, name, type: "corporate", currency: "EUR" });
+    const ev = await owner
+      .post("/api/v1/events")
+      .send({ workspaceId, name, type: "corporate", currency: "EUR" });
     expect(ev.status).toBe(201);
     if (!eventA) eventA = ev.body.id;
     else eventB = ev.body.id;
@@ -112,27 +118,36 @@ describe("C2 — idempotency is scoped per event (no cross-event collision or le
   let firstPaymentId: number;
 
   it("records a payment with an idempotency key", async () => {
-    const res = await owner
-      .post(`/api/v1/events/${eventA}/expenses/${expenseA}/payments`)
-      .send({ amount: 10000, paidAt: new Date().toISOString(), method: "bank_transfer", idempotencyKey: KEY });
+    const res = await owner.post(`/api/v1/events/${eventA}/expenses/${expenseA}/payments`).send({
+      amount: 10000,
+      paidAt: new Date().toISOString(),
+      method: "bank_transfer",
+      idempotencyKey: KEY,
+    });
     expect(res.status).toBe(201);
     firstPaymentId = res.body.payment.id;
     expect(res.body.idempotentReplay).toBe(false);
   });
 
   it("replaying the same key in the SAME event returns the same record", async () => {
-    const res = await owner
-      .post(`/api/v1/events/${eventA}/expenses/${expenseA}/payments`)
-      .send({ amount: 10000, paidAt: new Date().toISOString(), method: "bank_transfer", idempotencyKey: KEY });
+    const res = await owner.post(`/api/v1/events/${eventA}/expenses/${expenseA}/payments`).send({
+      amount: 10000,
+      paidAt: new Date().toISOString(),
+      method: "bank_transfer",
+      idempotencyKey: KEY,
+    });
     expect(res.status).toBe(201);
     expect(res.body.idempotentReplay).toBe(true);
     expect(res.body.payment.id).toBe(firstPaymentId);
   });
 
   it("the same key in a DIFFERENT event is a distinct operation — not a replay", async () => {
-    const res = await owner
-      .post(`/api/v1/events/${eventB}/expenses/${expenseB}/payments`)
-      .send({ amount: 10000, paidAt: new Date().toISOString(), method: "bank_transfer", idempotencyKey: KEY });
+    const res = await owner.post(`/api/v1/events/${eventB}/expenses/${expenseB}/payments`).send({
+      amount: 10000,
+      paidAt: new Date().toISOString(),
+      method: "bank_transfer",
+      idempotencyKey: KEY,
+    });
     expect(res.status).toBe(201);
     expect(res.body.idempotentReplay).toBe(false);
     expect(res.body.payment.id).not.toBe(firstPaymentId);
@@ -140,7 +155,9 @@ describe("C2 — idempotency is scoped per event (no cross-event collision or le
     // And event A still shows exactly one payment for its expense.
     const listA = await owner.get(`/api/v1/events/${eventA}/payments`);
     expect(listA.status).toBe(200);
-    const forExpense = listA.body.filter((p: { expenseId: number }) => Number(p.expenseId) === expenseA);
+    const forExpense = listA.body.filter(
+      (p: { expenseId: number }) => Number(p.expenseId) === expenseA,
+    );
     expect(forExpense).toHaveLength(1);
   });
 });
@@ -181,7 +198,9 @@ describe("C5 — planners cannot perform event admin actions", () => {
   });
 
   it("planner cannot manage event membership (403)", async () => {
-    const res = await planner.post(`/api/v1/events/${eventA}/members`).send({ userId: 1, role: "viewer" });
+    const res = await planner
+      .post(`/api/v1/events/${eventA}/members`)
+      .send({ userId: 1, role: "viewer" });
     expect(res.status).toBe(403);
   });
 
@@ -205,7 +224,9 @@ describe("C12 — workspace ownership transfer", () => {
 
   it("the owner must confirm with the correct password (401 on wrong)", async () => {
     const members = await owner.get(`/api/v1/workspaces/${workspaceId}/members`);
-    const target = members.body.find((m: { user: { email: string } }) => m.user.email === PLANNER_EMAIL);
+    const target = members.body.find(
+      (m: { user: { email: string } }) => m.user.email === PLANNER_EMAIL,
+    );
     const res = await owner
       .post(`/api/v1/workspaces/${workspaceId}/transfer-ownership`)
       .send({ memberId: target.id, password: "WrongPassword123!" });
@@ -214,7 +235,9 @@ describe("C12 — workspace ownership transfer", () => {
 
   it("successful transfer swaps roles: planner becomes owner, owner becomes admin", async () => {
     const members = await owner.get(`/api/v1/workspaces/${workspaceId}/members`);
-    const target = members.body.find((m: { user: { email: string } }) => m.user.email === PLANNER_EMAIL);
+    const target = members.body.find(
+      (m: { user: { email: string } }) => m.user.email === PLANNER_EMAIL,
+    );
     const res = await owner
       .post(`/api/v1/workspaces/${workspaceId}/transfer-ownership`)
       .send({ memberId: target.id, password: PASSWORD });
@@ -239,12 +262,16 @@ describe("H1 — email change requires re-verification of the new address", () =
   }, 30_000);
 
   it("request requires the current password (401 on wrong)", async () => {
-    const res = await changer.post("/api/v1/auth/change-email").send({ newEmail: NEW_EMAIL, password: "nope" });
+    const res = await changer
+      .post("/api/v1/auth/change-email")
+      .send({ newEmail: NEW_EMAIL, password: "nope" });
     expect(res.status).toBe(401);
   });
 
   it("request sends a confirmation link to the NEW address; nothing changes yet", async () => {
-    const res = await changer.post("/api/v1/auth/change-email").send({ newEmail: NEW_EMAIL, password: PASSWORD });
+    const res = await changer
+      .post("/api/v1/auth/change-email")
+      .send({ newEmail: NEW_EMAIL, password: PASSWORD });
     expect(res.status).toBe(200);
     const me = await changer.get("/api/v1/auth/me");
     expect(me.body.email).toBe(OLD_EMAIL);
@@ -260,9 +287,13 @@ describe("H1 — email change requires re-verification of the new address", () =
     expect(me.status).toBe(401);
 
     // Login works with the NEW address (and not with the old one).
-    const oldLogin = await request(BASE).post("/api/v1/auth/login").send({ email: OLD_EMAIL, password: PASSWORD });
+    const oldLogin = await request(BASE)
+      .post("/api/v1/auth/login")
+      .send({ email: OLD_EMAIL, password: PASSWORD });
     expect(oldLogin.status).toBe(401);
-    const newLogin = await request(BASE).post("/api/v1/auth/login").send({ email: NEW_EMAIL, password: PASSWORD });
+    const newLogin = await request(BASE)
+      .post("/api/v1/auth/login")
+      .send({ email: NEW_EMAIL, password: PASSWORD });
     expect(newLogin.status).toBe(200);
   });
 });
@@ -291,20 +322,28 @@ describe("C11 — safe account deletion", () => {
   }, 60_000);
 
   it("deletion requires the password (401 on wrong)", async () => {
-    const res = await solo.delete("/api/v1/auth/account").send({ password: "wrong", confirmation: "DELETE" });
+    const res = await solo
+      .delete("/api/v1/auth/account")
+      .send({ password: "wrong", confirmation: "DELETE" });
     expect(res.status).toBe(401);
   });
 
   it("owning a shared workspace blocks deletion (409 with guidance)", async () => {
-    const res = await shared.delete("/api/v1/auth/account").send({ password: PASSWORD, confirmation: "DELETE" });
+    const res = await shared
+      .delete("/api/v1/auth/account")
+      .send({ password: PASSWORD, confirmation: "DELETE" });
     expect(res.status).toBe(409);
     expect(res.body.message).toMatch(/transfer ownership|remove all other members/i);
   });
 
   it("an account without shared ownership is deleted and cannot log in again", async () => {
-    const res = await solo.delete("/api/v1/auth/account").send({ password: PASSWORD, confirmation: "DELETE" });
+    const res = await solo
+      .delete("/api/v1/auth/account")
+      .send({ password: PASSWORD, confirmation: "DELETE" });
     expect(res.status).toBe(200);
-    const login = await request(BASE).post("/api/v1/auth/login").send({ email: SOLO_EMAIL, password: PASSWORD });
+    const login = await request(BASE)
+      .post("/api/v1/auth/login")
+      .send({ email: SOLO_EMAIL, password: PASSWORD });
     expect(login.status).toBe(401);
   });
 });
@@ -359,7 +398,11 @@ describe("C3 — production configuration fails fast", () => {
   it("refuses to boot with localhost origins in production", () => {
     const res = spawnSync("node", ["-e", envScript], {
       cwd: __dirname + "/..",
-      env: { ...baseEnv, WEB_ORIGIN: "http://localhost:3000", APP_BASE_URL: "http://localhost:3000" },
+      env: {
+        ...baseEnv,
+        WEB_ORIGIN: "http://localhost:3000",
+        APP_BASE_URL: "http://localhost:3000",
+      },
       encoding: "utf8",
     });
     expect(res.status).not.toBe(0);
@@ -442,7 +485,9 @@ describe("C4 — email verification gate (dedicated API instance)", () => {
       password: PASSWORD,
     });
     expect(reg.status).toBe(201);
-    const login = await agent.post("/api/v1/auth/login").send({ email: GATE_EMAIL, password: PASSWORD });
+    const login = await agent
+      .post("/api/v1/auth/login")
+      .send({ email: GATE_EMAIL, password: PASSWORD });
     expect(login.status).toBe(200);
 
     const blocked = await agent.get("/api/v1/workspaces");

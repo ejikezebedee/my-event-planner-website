@@ -26,7 +26,11 @@ function Confirm() {
     <Card className="w-full max-w-md text-center">
       <CardHeader>
         <CardTitle>
-          {state === "pending" ? "Confirming…" : state === "ok" ? "Email address changed" : "Confirmation failed"}
+          {state === "pending"
+            ? "Confirming…"
+            : state === "ok"
+              ? "Email address changed"
+              : "Confirmation failed"}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

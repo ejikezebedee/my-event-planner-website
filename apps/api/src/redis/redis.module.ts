@@ -5,5 +5,7 @@ import { RedisService } from "./redis.service";
 @Module({ providers: [RedisService], exports: [RedisService] })
 export class RedisModule implements OnModuleInit {
   constructor(private readonly redis: RedisService) {}
-  async onModuleInit() { await this.redis.connect(); }
+  async onModuleInit() {
+    await this.redis.connect();
+  }
 }

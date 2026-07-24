@@ -13,6 +13,12 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "test/**/*", "prisma/seed.ts", "vitest.config.ts", "vitest.e2e.config.ts"],
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "prisma/seed.ts",
+    "vitest.config.ts",
+    "vitest.e2e.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

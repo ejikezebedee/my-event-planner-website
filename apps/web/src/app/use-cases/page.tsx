@@ -8,13 +8,21 @@ const CASES = [
     icon: Heart,
     title: "Weddings",
     text: "Hundreds of guests, a dozen vendors and one budget that must survive reality. Track RSVPs by household, keep deposits and instalments straight, and walk into the day knowing every cent is accounted for.",
-    highlights: ["Guest groups & seating prep", "Vendor quotes vs. agreed prices", "Payment schedules per vendor"],
+    highlights: [
+      "Guest groups & seating prep",
+      "Vendor quotes vs. agreed prices",
+      "Payment schedules per vendor",
+    ],
   },
   {
     icon: Briefcase,
     title: "Corporate events",
     text: "Conferences, offsites and kickoffs with stakeholders who want numbers. Role-based access lets the whole team plan while finance sees exactly what was committed, paid and refunded.",
-    highlights: ["Team roles & audit log", "PDF reports for finance", "Budget variance at a glance"],
+    highlights: [
+      "Team roles & audit log",
+      "PDF reports for finance",
+      "Budget variance at a glance",
+    ],
   },
   {
     icon: Cake,
@@ -38,7 +46,11 @@ const CASES = [
     icon: HandHeart,
     title: "Non-profit & community",
     text: "Charity dinners and community festivals where every euro is scrutinised. Refund-aware ledgers and immutable history make the post-event report a formality, not a project.",
-    highlights: ["Transparent financial history", "Refund tracking", "Self-hostable for data control"],
+    highlights: [
+      "Transparent financial history",
+      "Refund tracking",
+      "Self-hostable for data control",
+    ],
   },
 ];
 
@@ -61,7 +73,9 @@ export default function UseCasesPage() {
               <p className="mt-2 flex-1 text-sm text-muted-foreground">{c.text}</p>
               <ul className="mt-4 space-y-1 text-xs text-muted-foreground">
                 {c.highlights.map((h) => (
-                  <li key={h} className="flex gap-2"><span className="text-primary">•</span> {h}</li>
+                  <li key={h} className="flex gap-2">
+                    <span className="text-primary">•</span> {h}
+                  </li>
                 ))}
               </ul>
             </CardContent>
@@ -69,7 +83,9 @@ export default function UseCasesPage() {
         ))}
       </section>
       <section className="container pb-16 text-center">
-        <Button size="lg" asChild><Link href="/register">Plan your event</Link></Button>
+        <Button size="lg" asChild>
+          <Link href="/register">Plan your event</Link>
+        </Button>
       </section>
       <PublicFooter />
     </main>

@@ -50,7 +50,9 @@ export class StorageService {
   }
 
   newStorageKey(originalName: string): string {
-    const ext = extname(originalName).toLowerCase().replace(/[^a-z0-9.]/g, "");
+    const ext = extname(originalName)
+      .toLowerCase()
+      .replace(/[^a-z0-9.]/g, "");
     return `${Date.now().toString(36)}-${randomBytes(12).toString("hex")}${ext}`;
   }
 
@@ -76,7 +78,12 @@ export class StorageService {
     if (this.s3) {
       await this.ensureBucket();
       await this.s3.send(
-        new PutObjectCommand({ Bucket: env.S3_BUCKET, Key: storageKey, Body: data, ContentType: mimeType }),
+        new PutObjectCommand({
+          Bucket: env.S3_BUCKET,
+          Key: storageKey,
+          Body: data,
+          ContentType: mimeType,
+        }),
       );
       return { storageKey, sizeBytes: data.length };
     }
@@ -88,7 +95,9 @@ export class StorageService {
 
   async getBuffer(storageKey: string): Promise<Buffer> {
     if (this.s3) {
-      const out = await this.s3.send(new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: storageKey }));
+      const out = await this.s3.send(
+        new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: storageKey }),
+      );
       const stream = out.Body as Readable;
       const chunks: Buffer[] = [];
       for await (const chunk of stream) chunks.push(Buffer.from(chunk));
@@ -120,7 +129,7 @@ export class StorageService {
       new GetObjectCommand({
         Bucket: env.S3_BUCKET,
         Key: storageKey,
-        ResponseContentDisposition: `attachment; filename*=UTF-8\'\'${encodeURIComponent(originalName.replace(/[\r\n]/g, ""))}`,
+        ResponseContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(originalName.replace(/[\r\n]/g, ""))}`,
         ResponseContentType: "application/octet-stream",
       }),
       { expiresIn: env.SIGNED_URL_TTL },

@@ -45,8 +45,11 @@ function sums(rows: { amount: bigint; type: string; reversedAt: Date | null }[])
   return { paid, refunded, net: paid - refunded };
 }
 
-
-function idempotencyHash(operation: "payment" | "refund", targetId: bigint, input: PaymentInput | RefundInput): string {
+function idempotencyHash(
+  operation: "payment" | "refund",
+  targetId: bigint,
+  input: PaymentInput | RefundInput,
+): string {
   const payload = JSON.stringify({
     operation,
     targetId: targetId.toString(),
@@ -106,12 +109,19 @@ export class PaymentsService {
       const existing = await this.findByIdempotencyKey(eventId, input.idempotencyKey);
       if (existing) {
         const expected = idempotencyHash("payment", expenseId, input);
-        if (existing.idempotencyHash !== expected) throw new ConflictException("Idempotency key was already used with a different payment payload");
+        if (existing.idempotencyHash !== expected)
+          throw new ConflictException(
+            "Idempotency key was already used with a different payment payload",
+          );
         return { payment: existing, expenseStatus: null, idempotentReplay: true };
       }
     }
 
-    let result: { payment: { id: bigint }; expenseStatus: ExpenseStatus | null; idempotentReplay: boolean };
+    let result: {
+      payment: { id: bigint };
+      expenseStatus: ExpenseStatus | null;
+      idempotentReplay: boolean;
+    };
     try {
       result = await this.prisma.$transaction(async (tx) => {
         const expense = await tx.expense.findFirst({ where: { id: expenseId, eventId } });
@@ -144,7 +154,9 @@ export class PaymentsService {
             recipient: input.recipient ?? null,
             notes: input.notes ?? null,
             idempotencyKey: input.idempotencyKey ?? null,
-            idempotencyHash: input.idempotencyKey ? idempotencyHash("payment", expenseId, input) : null,
+            idempotencyHash: input.idempotencyKey
+              ? idempotencyHash("payment", expenseId, input)
+              : null,
             createdById: userId,
           },
         });
@@ -180,7 +192,10 @@ export class PaymentsService {
         const existing = await this.findByIdempotencyKey(eventId, input.idempotencyKey);
         if (existing) {
           const expected = idempotencyHash("payment", expenseId, input);
-          if (existing.idempotencyHash !== expected) throw new ConflictException("Idempotency key was already used with a different payment payload");
+          if (existing.idempotencyHash !== expected)
+            throw new ConflictException(
+              "Idempotency key was already used with a different payment payload",
+            );
           return { payment: existing, expenseStatus: null, idempotentReplay: true };
         }
       }
@@ -213,7 +228,10 @@ export class PaymentsService {
       const existing = await this.findByIdempotencyKey(eventId, input.idempotencyKey);
       if (existing) {
         const expected = idempotencyHash("refund", paymentId, input);
-        if (existing.idempotencyHash !== expected) throw new ConflictException("Idempotency key was already used with a different refund payload");
+        if (existing.idempotencyHash !== expected)
+          throw new ConflictException(
+            "Idempotency key was already used with a different refund payload",
+          );
         return { refund: existing, expenseStatus: null, idempotentReplay: true };
       }
     }
@@ -260,7 +278,9 @@ export class PaymentsService {
             recipient: input.recipient ?? null,
             notes: input.notes ?? null,
             idempotencyKey: input.idempotencyKey ?? null,
-            idempotencyHash: input.idempotencyKey ? idempotencyHash("refund", paymentId, input) : null,
+            idempotencyHash: input.idempotencyKey
+              ? idempotencyHash("refund", paymentId, input)
+              : null,
             createdById: userId,
           },
         });
@@ -302,7 +322,10 @@ export class PaymentsService {
         const existing = await this.findByIdempotencyKey(eventId, input.idempotencyKey);
         if (existing) {
           const expected = idempotencyHash("refund", paymentId, input);
-          if (existing.idempotencyHash !== expected) throw new ConflictException("Idempotency key was already used with a different refund payload");
+          if (existing.idempotencyHash !== expected)
+            throw new ConflictException(
+              "Idempotency key was already used with a different refund payload",
+            );
           return { refund: existing, expenseStatus: null, idempotentReplay: true };
         }
       }
@@ -331,7 +354,8 @@ export class PaymentsService {
     const result = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findFirst({ where: { id: paymentId, eventId } });
       if (!payment) throw new NotFoundException("Payment not found");
-      if (payment.reversedAt) throw new BadRequestException("This payment has already been reversed");
+      if (payment.reversedAt)
+        throw new BadRequestException("This payment has already been reversed");
 
       const expense = await tx.expense.findUniqueOrThrow({ where: { id: payment.expenseId } });
       await tx.payment.update({

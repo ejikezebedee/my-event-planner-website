@@ -116,7 +116,9 @@ describe("My Event Planner API (e2e)", () => {
 
   it("blocks viewers from writing", async () => {
     const viewer = request.agent(BASE);
-    await viewer.post("/api/v1/auth/login").send({ email: "viewer@eventplanner.dev", password: "Demo1234!" });
+    await viewer
+      .post("/api/v1/auth/login")
+      .send({ email: "viewer@eventplanner.dev", password: "Demo1234!" });
     const events = await viewer.get("/api/v1/events?workspaceId=1");
     expect(events.status).toBe(200);
     const res = await viewer.post(`/api/v1/events/${events.body[0].id}/expenses`).send({

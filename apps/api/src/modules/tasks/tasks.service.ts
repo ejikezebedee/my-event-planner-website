@@ -33,7 +33,13 @@ export class TasksService {
   async list(
     userId: bigint,
     eventId: bigint,
-    filter: { q?: string; status?: string; priority?: string; assigneeId?: number; overdue?: boolean } = {},
+    filter: {
+      q?: string;
+      status?: string;
+      priority?: string;
+      assigneeId?: number;
+      overdue?: boolean;
+    } = {},
   ) {
     await this.access.assertEventAccess(userId, eventId);
     const tasks = await this.prisma.task.findMany({
@@ -51,10 +57,7 @@ export class TasksService {
         .filter((d) => d.dependsOn.status !== "completed" && d.dependsOn.status !== "cancelled")
         .map((d) => ({ id: d.dependsOnTaskId, title: d.dependsOn.title }));
       const overdue =
-        t.dueAt != null &&
-        t.dueAt < now &&
-        t.status !== "completed" &&
-        t.status !== "cancelled";
+        t.dueAt != null && t.dueAt < now && t.status !== "completed" && t.status !== "cancelled";
       return {
         ...t,
         dependencyIds: t.dependencies.map((d) => d.dependsOnTaskId),
@@ -77,7 +80,11 @@ export class TasksService {
   }
 
   /** Detect whether making `taskId` depend on `dependsOnTaskId` would create a cycle. */
-  private async wouldCycle(eventId: bigint, taskId: bigint, dependsOnTaskId: bigint): Promise<boolean> {
+  private async wouldCycle(
+    eventId: bigint,
+    taskId: bigint,
+    dependsOnTaskId: bigint,
+  ): Promise<boolean> {
     if (taskId === dependsOnTaskId) return true;
     const deps = await this.prisma.taskDependency.findMany({
       where: { task: { eventId } },
@@ -105,7 +112,8 @@ export class TasksService {
     const unique = [...new Set(dependencyIds.map((id) => BigInt(id)))];
     for (const depId of unique) {
       const depTask = await this.prisma.task.findFirst({ where: { id: depId, eventId } });
-      if (!depTask) throw new BadRequestException(`Dependency task ${depId} not found in this event`);
+      if (!depTask)
+        throw new BadRequestException(`Dependency task ${depId} not found in this event`);
       if (await this.wouldCycle(eventId, taskId, depId)) {
         throw new BadRequestException("This dependency would create a circular reference");
       }
@@ -166,8 +174,16 @@ export class TasksService {
         dueAt: input.dueAt ?? null,
         status: input.status,
         notes: input.notes ?? null,
-        completedAt: becameCompleted ? new Date() : input.status === "completed" ? existing.completedAt : null,
-        completedById: becameCompleted ? userId : input.status === "completed" ? existing.completedById : null,
+        completedAt: becameCompleted
+          ? new Date()
+          : input.status === "completed"
+            ? existing.completedAt
+            : null,
+        completedById: becameCompleted
+          ? userId
+          : input.status === "completed"
+            ? existing.completedById
+            : null,
       },
     });
     await this.syncDependencies(eventId, taskId, input.dependencyIds);

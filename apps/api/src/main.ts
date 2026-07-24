@@ -17,7 +17,9 @@ async function bootstrap() {
   if (env.TRUST_PROXY) app.getHttpAdapter().getInstance().set("trust proxy", env.TRUST_PROXY);
   app.use(helmet());
   app.use(cookieParser());
-  const corsOrigins = env.WEB_ORIGIN.split(",").map((o) => o.trim()).filter(Boolean);
+  const corsOrigins = env.WEB_ORIGIN.split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
   app.enableCors({ origin: corsOrigins, credentials: true });
   app.setGlobalPrefix("api");
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: "1" });
